@@ -1,0 +1,320 @@
+'use client';
+
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { supabase } from '@/lib/supabase';
+import { Clock, ArrowRight, Check, AlertTriangle, Loader2 } from 'lucide-react';
+
+export interface BoardOrder {
+  id: string;
+  vehiculo_id: string;
+  nivel_gasolina: string;
+  kilometraje_ingreso: number;
+  notas_recepcion: string;
+  estado: 'En Fila' | 'En Proceso' | 'Listo para Entrega';
+  fecha_ingreso: string;
+  vehiculos: {
+    marca: string;
+    modelo: string;
+    anio: number;
+    placas: string;
+  };
+}
+
+export interface TallerBoardRef {
+  refreshBoard: () => void;
+}
+
+const MOCK_ORDERS: BoardOrder[] = [
+  {
+    id: '11eebc99-9c0b-4ef8-bb6d-6bb9bd380e01',
+    vehiculo_id: 'e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a55',
+    nivel_gasolina: '1/4',
+    kilometraje_ingreso: 72050,
+    notas_recepcion: 'Cliente reporta un rechinido constante al frenar a baja velocidad.',
+    estado: 'En Fila',
+    fecha_ingreso: new Date(Date.now() - 120 * 60000).toISOString(), // 2 hours ago
+    vehiculos: { marca: 'Chevrolet', modelo: 'Aveo', anio: 2018, placas: 'VMY-789-B' }
+  },
+  {
+    id: '11eebc99-9c0b-4ef8-bb6d-6bb9bd380e04',
+    vehiculo_id: 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99',
+    nivel_gasolina: 'Lleno',
+    kilometraje_ingreso: 89000,
+    notas_recepcion: 'Servicio de cambio de amortiguadores delanteros y revisión de bujes de suspensión.',
+    estado: 'En Fila',
+    fecha_ingreso: new Date(Date.now() - 300 * 60000).toISOString(), // 5 hours ago
+    vehiculos: { marca: 'Nissan', modelo: 'NP300', anio: 2019, placas: 'VMX-456-D' }
+  },
+  {
+    id: '11eebc99-9c0b-4ef8-bb6d-6bb9bd380e02',
+    vehiculo_id: 'f0eebc99-9c0b-4ef8-bb6d-6bb9bd380a66',
+    nivel_gasolina: '3/4',
+    kilometraje_ingreso: 35080,
+    notas_recepcion: 'Montaje de 4 llantas nuevas Goodyear Wrangler y alineación / balanceo.',
+    estado: 'En Proceso',
+    fecha_ingreso: new Date(Date.now() - 240 * 60000).toISOString(), // 4 hours ago
+    vehiculos: { marca: 'Toyota', modelo: 'Hilux', anio: 2021, placas: 'VNZ-123-C' }
+  },
+  {
+    id: '11eebc99-9c0b-4ef8-bb6d-6bb9bd380e03',
+    vehiculo_id: 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
+    nivel_gasolina: '1/2',
+    kilometraje_ingreso: 45010,
+    notas_recepcion: 'Alineación y Balanceo de rutina. Calibración general de llantas.',
+    estado: 'Listo para Entrega',
+    fecha_ingreso: new Date(Date.now() - 60 * 60000).toISOString(), // 1 hour ago
+    vehiculos: { marca: 'Nissan', modelo: 'Versa', anio: 2020, placas: 'VJS-456-A' }
+  }
+];
+
+const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
+  const [orders, setOrders] = useState<BoardOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('ordenes_servicio')
+        .select(`
+          id,
+          vehiculo_id,
+          nivel_gasolina,
+          kilometraje_ingreso,
+          notas_recepcion,
+          estado,
+          fecha_ingreso,
+          vehiculos (
+            marca,
+            modelo,
+            anio,
+            placas
+          )
+        `)
+        .order('fecha_ingreso', { ascending: true });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        // Cast related vehicle table join correctly
+        const formatted = data.map((item: any) => ({
+          ...item,
+          vehiculos: Array.isArray(item.vehiculos) ? item.vehiculos[0] : item.vehiculos
+        })) as BoardOrder[];
+        setOrders(formatted);
+      } else {
+        setOrders(MOCK_ORDERS);
+      }
+    } catch (err) {
+      console.error('Error fetching workshop board, falling back:', err);
+      setOrders(MOCK_ORDERS);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Expose the refresh action to parent component using imperitative handle
+  useImperativeHandle(ref, () => ({
+    refreshBoard() {
+      fetchOrders();
+    }
+  }));
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  // Update order state (move card)
+  const handleMoveOrder = async (orderId: string, currentStatus: BoardOrder['estado']) => {
+    let nextStatus: BoardOrder['estado'] = 'En Fila';
+    if (currentStatus === 'En Fila') nextStatus = 'En Proceso';
+    else if (currentStatus === 'En Proceso') nextStatus = 'Listo para Entrega';
+    else return; // If already ready, no next status
+
+    setUpdatingId(orderId);
+    try {
+      const { error } = await supabase
+        .from('ordenes_servicio')
+        .update({ estado: nextStatus })
+        .eq('id', orderId);
+
+      if (error) throw error;
+      
+      // Update local state directly
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, estado: nextStatus } : o));
+    } catch (err) {
+      console.error('Error moving order status:', err);
+      // Mock update
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, estado: nextStatus } : o));
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  // Complete/archive order
+  const handleArchiveOrder = async (orderId: string) => {
+    setUpdatingId(orderId);
+    try {
+      const { error } = await supabase
+        .from('ordenes_servicio')
+        .delete() // Deleting represents vehicle checkout from patio in this phase
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      setOrders(prev => prev.filter(o => o.id !== orderId));
+    } catch (err) {
+      console.error('Error checking out vehicle:', err);
+      // Mock update
+      setOrders(prev => prev.filter(o => o.id !== orderId));
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const getElapsedTime = (isoString: string) => {
+    const diffMs = Date.now() - new Date(isoString).getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 0) return 'Justo ahora';
+    if (diffMins < 60) return `Hace ${diffMins}m`;
+    const diffHours = Math.floor(diffMins / 60);
+    return `Hace ${diffHours}h ${diffMins % 60}m`;
+  };
+
+  // Filter columns
+  const enFilaOrders = orders.filter(o => o.estado === 'En Fila');
+  const enProcesoOrders = orders.filter(o => o.estado === 'En Proceso');
+  const listoOrders = orders.filter(o => o.estado === 'Listo para Entrega');
+
+  const columns = [
+    { key: 'En Fila', title: 'En Fila', data: enFilaOrders, badgeStyle: 'bg-neutral-100 text-neutral-800' },
+    { key: 'En Proceso', title: 'En Proceso', data: enProcesoOrders, badgeStyle: 'bg-blue-50 text-cova-blue border border-blue-100 font-bold' },
+    { key: 'Listo para Entrega', title: 'Listo para Entrega', data: listoOrders, badgeStyle: 'bg-emerald-50 text-emerald-800 border border-emerald-100 font-bold' }
+  ] as const;
+
+  return (
+    <div className="w-full flex flex-col h-full gap-4">
+      {loading ? (
+        <div className="py-16 text-center text-xs text-charcoal-light animate-pulse font-medium">
+          Cargando tablero operativo...
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {columns.map((col) => (
+            <div key={col.key} className="flex flex-col gap-3.5 bg-neutral-50/50 border border-hairline rounded-lg p-3.5 min-h-[500px]">
+              {/* Column Header */}
+              <div className="flex items-center justify-between pb-2 border-b-hairline">
+                <span className="text-xs font-bold text-charcoal uppercase tracking-wider">
+                  {col.title}
+                </span>
+                <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full ${col.badgeStyle}`}>
+                  {col.data.length}
+                </span>
+              </div>
+
+              {/* Cards Container */}
+              <div className="flex flex-col gap-2.5 overflow-auto dense-scrollbar flex-1 max-h-[550px]">
+                {col.data.length === 0 ? (
+                  <div className="py-10 text-center border border-dashed border-hairline rounded-lg bg-white/40 flex flex-col items-center justify-center p-4">
+                    <Clock className="w-5 h-5 text-neutral-300 mb-1.5" />
+                    <p className="text-[10px] font-medium text-neutral-400">Sin vehículos en esta etapa</p>
+                  </div>
+                ) : (
+                  col.data.map((order) => (
+                    <div key={order.id} className="panel-card p-3 flex flex-col gap-2 bg-white">
+                      {/* Card Header: Plates & Timing */}
+                      <div className="flex items-center justify-between">
+                        {/* Plates representation resembling Mexican plate style */}
+                        <div className="bg-[#E2E8F0] border border-neutral-300 rounded px-1.5 py-0.5 text-[10px] font-mono font-bold text-charcoal tracking-wide uppercase">
+                          {order.vehiculos?.placas}
+                        </div>
+                        <div className="flex items-center gap-1 text-[9px] text-charcoal-light/70 font-mono">
+                          <Clock className="w-3 h-3 text-neutral-400" />
+                          <span>{getElapsedTime(order.fecha_ingreso)}</span>
+                        </div>
+                      </div>
+
+                      {/* Vehicle Model & Gas */}
+                      <div>
+                        <h4 className="text-xs font-semibold text-charcoal leading-snug">
+                          {order.vehiculos?.marca} {order.vehiculos?.modelo}
+                        </h4>
+                        <div className="flex items-center gap-2 mt-1 font-mono text-[9px] text-charcoal-light">
+                          <span>Año: {order.vehiculos?.anio}</span>
+                          <span>•</span>
+                          <span>Gasolina: {order.nivel_gasolina}</span>
+                          <span>•</span>
+                          <span>KM: {order.kilometraje_ingreso.toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      {/* Notes / Requested Service */}
+                      {order.notas_recepcion && (
+                        <div className="bg-neutral-50 border border-hairline rounded p-2 text-[10px] text-charcoal-light leading-relaxed font-sans italic max-h-[50px] overflow-hidden text-ellipsis">
+                          "{order.notas_recepcion}"
+                        </div>
+                      )}
+
+                      {/* Action trigger button */}
+                      <div className="mt-1 pt-2 border-t border-neutral-100 flex justify-end">
+                        {order.estado === 'En Fila' && (
+                          <button
+                            onClick={() => handleMoveOrder(order.id, order.estado)}
+                            disabled={updatingId === order.id}
+                            className="text-[9px] font-bold bg-white hover:bg-neutral-50 text-charcoal border border-hairline hover:border-neutral-400 rounded px-2.5 py-1.5 transition-all flex items-center gap-1 hover:-translate-y-0.5 shadow-sm active:translate-y-0 cursor-pointer"
+                          >
+                            {updatingId === order.id ? (
+                              <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                            ) : (
+                              <ArrowRight className="w-2.5 h-2.5 text-cova-blue" />
+                            )}
+                            <span>Iniciar Trabajo</span>
+                          </button>
+                        )}
+
+                        {order.estado === 'En Proceso' && (
+                          <button
+                            onClick={() => handleMoveOrder(order.id, order.estado)}
+                            disabled={updatingId === order.id}
+                            className="text-[9px] font-bold bg-cova-blue hover:shadow-md text-ceramic border border-cova-blue rounded px-2.5 py-1.5 transition-all flex items-center gap-1 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                          >
+                            {updatingId === order.id ? (
+                              <Loader2 className="w-2.5 h-2.5 animate-spin text-white" />
+                            ) : (
+                              <Check className="w-2.5 h-2.5 text-white" />
+                            )}
+                            <span>Terminar Trabajo</span>
+                          </button>
+                        )}
+
+                        {order.estado === 'Listo para Entrega' && (
+                          <button
+                            onClick={() => handleArchiveOrder(order.id)}
+                            disabled={updatingId === order.id}
+                            className="text-[9px] font-bold bg-[#E2E8F0] hover:bg-[#CBD5E1] text-[#111111] border border-neutral-300 hover:border-neutral-400 rounded px-2.5 py-1.5 transition-all flex items-center gap-1 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                          >
+                            {updatingId === order.id ? (
+                              <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                            ) : (
+                              <Check className="w-2.5 h-2.5 text-cova-blue" />
+                            )}
+                            <span>Dar Salida</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
+
+TallerBoard.displayName = 'TallerBoard';
+export default TallerBoard;

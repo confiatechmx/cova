@@ -1,26 +1,75 @@
 @import "tailwindcss";
 
+@theme {
+  --color-ceramic: #F8F9FA;
+  --color-charcoal: #111111;
+  --color-charcoal-light: #555555;
+  --color-hairline: #E2E8F0;
+  --color-cova-blue: #002D62; /* Azul Oscuro de logo.jpg */
+  
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #F8F9FA;
+  --foreground: #111111;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Hairline border utilities */
+.border-hairline {
+  border-width: 1px;
+  border-color: #E2E8F0;
+}
+
+.border-b-hairline {
+  border-bottom-width: 1px;
+  border-color: #E2E8F0;
+}
+
+.border-t-hairline {
+  border-top-width: 1px;
+  border-color: #E2E8F0;
+}
+
+/* Linear-inspired physical interactive cards */
+.panel-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.panel-card:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.01);
+  transform: translateY(-1px);
+}
+
+/* Scrollbars for dense UI tables */
+.dense-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.dense-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dense-scrollbar::-webkit-scrollbar-thumb {
+  background: #E2E8F0;
+  border-radius: 3px;
+}
+
+.dense-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #CBD5E1;
 }
