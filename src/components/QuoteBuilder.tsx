@@ -19,6 +19,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import ModalAltaExpress from './ModalAltaExpress';
+import ModalAltaVehiculo from './ModalAltaVehiculo';
 import { createPortal } from 'react-dom';
 
 export interface QuoteItem {
@@ -156,6 +157,7 @@ export default function QuoteBuilder({
 
   // Phase 6 States
   const [isAltaExpressOpen, setIsAltaExpressOpen] = useState(false);
+  const [isAltaVehiculoOpen, setIsAltaVehiculoOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Tarjeta' | 'Transferencia'>('Efectivo');
   const [amountReceived, setAmountReceived] = useState<string>('');
@@ -471,6 +473,11 @@ export default function QuoteBuilder({
   const handleAltaExpressSuccess = async (newClientId: string, newVehicleId: string) => {
     await fetchClientsAndVehicles(newClientId, newVehicleId);
     addLog('Alta Express exitosa: Cliente y vehículo creados y asignados', 'success');
+  };
+
+  const handleAltaVehiculoSuccess = async (newVehicleId: string) => {
+    await fetchClientsAndVehicles(selectedClientId, newVehicleId);
+    addLog('Alta de vehículo exitosa: Vehículo creado y asignado', 'success');
   };
 
   const handleConfirmPayment = async () => {
@@ -855,28 +862,39 @@ export default function QuoteBuilder({
             </button>
           </div>
 
-          {/* Vehicle Select */}
-          <div className="relative">
-            <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-charcoal-light/60 uppercase tracking-wider flex items-center gap-1">
-              <Car className="w-2.5 h-2.5" />
-              <span>Vehículo</span>
-            </label>
-            <select
-              value={selectedVehicleId}
-              onChange={(e) => setSelectedVehicleId(e.target.value)}
+          {/* Vehicle Select with Inline Button */}
+          <div className="flex gap-1.5 items-end">
+            <div className="relative flex-1">
+              <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-charcoal-light/60 uppercase tracking-wider flex items-center gap-1">
+                <Car className="w-2.5 h-2.5" />
+                <span>Vehículo</span>
+              </label>
+              <select
+                value={selectedVehicleId}
+                onChange={(e) => setSelectedVehicleId(e.target.value)}
+                disabled={!selectedClientId}
+                className="w-full bg-white border border-hairline rounded pt-4 pb-1 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 transition-colors appearance-none cursor-pointer disabled:bg-neutral-50 disabled:cursor-not-allowed"
+              >
+                {currentClient?.vehiculos && currentClient.vehiculos.length > 0 ? (
+                  currentClient.vehiculos.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.marca} {v.modelo} {v.anio} • {v.placas}
+                    </option>
+                  ))
+                ) : (
+                  <option>Sin vehículos asociados</option>
+                )}
+              </select>
+            </div>
+            <button
+              type="button"
               disabled={!selectedClientId}
-              className="w-full bg-white border border-hairline rounded pt-4 pb-1 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 transition-colors appearance-none cursor-pointer disabled:bg-neutral-50 disabled:cursor-not-allowed"
+              onClick={() => setIsAltaVehiculoOpen(true)}
+              title="Añadir Auto Adicional para este Cliente"
+              className="h-[34px] w-[34px] flex items-center justify-center bg-white hover:bg-neutral-50 border border-hairline hover:border-neutral-400 text-cova-blue hover:text-cova-blue/80 rounded transition-colors cursor-pointer flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-hairline"
             >
-              {currentClient?.vehiculos && currentClient.vehiculos.length > 0 ? (
-                currentClient.vehiculos.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.marca} {v.modelo} {v.anio} • {v.placas}
-                  </option>
-                ))
-              ) : (
-                <option>Sin vehículos asociados</option>
-              )}
-            </select>
+              <Plus className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
@@ -1425,6 +1443,15 @@ export default function QuoteBuilder({
         isOpen={isAltaExpressOpen}
         onClose={() => setIsAltaExpressOpen(false)}
         onSuccess={handleAltaExpressSuccess}
+      />
+
+      {/* Modal Alta Vehiculo */}
+      <ModalAltaVehiculo
+        isOpen={isAltaVehiculoOpen}
+        onClose={() => setIsAltaVehiculoOpen(false)}
+        onSuccess={handleAltaVehiculoSuccess}
+        clienteId={selectedClientId}
+        clienteNombre={currentClient?.nombre || ''}
       />
     </div>
   );
