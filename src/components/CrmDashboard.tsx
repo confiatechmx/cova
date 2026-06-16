@@ -49,6 +49,12 @@ export default function CrmDashboard() {
   const [loadingQueue, setLoadingQueue] = useState(true);
   const [simulating, setSimulating] = useState(false);
 
+  // Automation Rules state
+  const [rules, setRules] = useState<{ id: string; nombre: string; activa: boolean }[]>([]);
+  const [loadingRules, setLoadingRules] = useState(true);
+  const [togglingRuleId, setTogglingRuleId] = useState<string | null>(null);
+  const [forcingScan, setForcingScan] = useState(false);
+
   // Fetch connection status from Next.js API
   const fetchStatus = async (showLoading = false) => {
     if (showLoading) setLoadingStatus(true);
@@ -114,6 +120,7 @@ export default function CrmDashboard() {
     fetchStatus(true);
     fetchTemplates();
     fetchQueue(true);
+    fetchRules();
 
     // Setup polling intervals for status and queue (every 5 seconds)
     const statusInterval = setInterval(() => fetchStatus(false), 5000);
@@ -189,6 +196,78 @@ export default function CrmDashboard() {
       console.error('Error simulating notification:', err);
     } finally {
       setSimulating(false);
+    }
+  };
+
+  const fetchRules = async () => {
+    try {
+      setLoadingRules(true);
+      const { data, error } = await supabase
+        .from('reglas_automatizacion')
+        .select('*')
+        .order('id', { ascending: true });
+      if (error) throw error;
+      setRules(data || []);
+    } catch (err) {
+      console.error('Error fetching rules:', err);
+    } finally {
+      setLoadingRules(false);
+    }
+  };
+
+  const handleToggleRule = async (ruleId: string, active: boolean) => {
+    setTogglingRuleId(ruleId);
+    try {
+      const res = await fetch('/api/whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggle_rule', ruleId, active })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Fallo al actualizar regla');
+      
+      // Update local state
+      setRules(prev => prev.map(r => r.id === ruleId ? { ...r, activa: active } : r));
+    } catch (err) {
+      console.error('Error toggling rule:', err);
+      alert('Error al actualizar la regla. Por favor, intenta de nuevo.');
+    } finally {
+      setTogglingRuleId(null);
+    }
+  };
+
+  const handleForceTestScan = async () => {
+    setForcingScan(true);
+    try {
+      const res = await fetch('/api/whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'force_cron' })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Fallo al forzar escaneo');
+      
+      alert(`Ejecución de prueba completada. Se encolaron ${data.enqueuedCount} recordatorios.`);
+      // Instantly refresh queue
+      await fetchQueue(false);
+    } catch (err: any) {
+      console.error('Error forcing test scan:', err);
+      alert(`Error al forzar la ejecución de prueba: ${err.message}`);
+    } finally {
+      setForcingScan(false);
+    }
+  };
+
+  const getRuleDescription = (ruleId: string) => {
+    switch (ruleId) {
+      case 'enviar_cotizacion_auto':
+        return 'Envía automáticamente un WhatsApp con el detalle en PDF/link al cliente cuando se genera una cotización en el mostrador.';
+      case 'avisar_auto_listo':
+        return 'Notifica de inmediato al cliente cuando el estado de su vehículo en el taller se marca como Listo para Entrega.';
+      case 'recordatorio_rotacion_6m':
+        return 'Analiza las ventas pasadas diariamente y notifica al cliente que es momento de rotar, alinear y balancear sus llantas.';
+      default:
+        return '';
     }
   };
 
@@ -411,6 +490,82 @@ export default function CrmDashboard() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Panel 4: Reglas de Automatización Activas (Takes 12 cols, below) */}
+      <div className="lg:col-span-12 panel-card p-5 bg-white flex flex-col">
+        <div className="pb-3 mb-4 border-b-hairline flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-charcoal uppercase tracking-wider">
+              Reglas de Automatización Activas
+            </span>
+            <span className="text-[9px] bg-neutral-100 text-charcoal-light font-mono px-1.5 py-0.5 rounded">
+              Bento Automation Engine
+            </span>
+          </div>
+          
+          <button
+            onClick={handleForceTestScan}
+            disabled={forcingScan}
+            className="text-[9px] font-bold bg-white hover:bg-neutral-50 text-charcoal border border-hairline hover:border-neutral-400 px-3 py-1.5 rounded transition-all flex items-center gap-1.5 hover:-translate-y-0.5 shadow-sm cursor-pointer"
+          >
+            {forcingScan ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="w-3 h-3 text-cova-blue" />
+            )}
+            <span>Forzar Ejecución de Prueba (6 Meses)</span>
+          </button>
+        </div>
+
+        {loadingRules ? (
+          <div className="flex items-center justify-center py-8">
+            <span className="text-xs text-charcoal-light animate-pulse font-medium">Cargando reglas...</span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {rules.map((rule) => (
+              <div 
+                key={rule.id} 
+                className="p-4 border border-hairline rounded bg-neutral-50/50 flex flex-col justify-between hover:border-neutral-300 transition-all group"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] font-mono font-bold text-neutral-400 uppercase tracking-wider">
+                      {rule.id.replace(/_/g, ' ')}
+                    </span>
+                    
+                    {/* Switch toggle */}
+                    <label className="relative inline-flex items-center cursor-pointer select-none">
+                      <input 
+                        type="checkbox" 
+                        checked={rule.activa} 
+                        onChange={() => handleToggleRule(rule.id, !rule.activa)}
+                        className="sr-only peer"
+                        disabled={togglingRuleId === rule.id}
+                      />
+                      <div className="w-9 h-5 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cova-blue"></div>
+                    </label>
+                  </div>
+                  
+                  <h4 className="text-xs font-semibold text-charcoal mb-1">
+                    {rule.nombre}
+                  </h4>
+                  <p className="text-[10px] text-charcoal-light leading-relaxed">
+                    {getRuleDescription(rule.id)}
+                  </p>
+                </div>
+                
+                <div className="mt-3 pt-3 border-t border-dashed border-neutral-200 flex items-center justify-between text-[9px]">
+                  <span className="text-neutral-400 font-mono">Estado:</span>
+                  <span className={`font-semibold ${rule.activa ? 'text-cova-blue' : 'text-neutral-400'}`}>
+                    {rule.activa ? 'Activa' : 'Inactiva'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

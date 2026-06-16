@@ -140,6 +140,79 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
         .eq('id', orderId);
 
       if (error) throw error;
+
+      // --- AUTOMATION: Avisar Auto Listo rule ---
+      if (nextStatus === 'Listo para Entrega') {
+        try {
+          // 1. Check if the rule is active
+          const { data: ruleData, error: ruleErr } = await supabase
+            .from('reglas_automatizacion')
+            .select('activa')
+            .eq('id', 'avisar_auto_listo')
+            .single();
+
+          if (!ruleErr && ruleData?.activa) {
+            // 2. Fetch order details with vehicle and client info
+            const { data: orderDetails, error: detailsErr } = await supabase
+              .from('ordenes_servicio')
+              .select(`
+                kilometraje_ingreso,
+                vehiculos (
+                  marca,
+                  modelo,
+                  placas,
+                  clientes (
+                    nombre,
+                    telefono
+                  )
+                )
+              `)
+              .eq('id', orderId)
+              .single();
+
+            if (!detailsErr && orderDetails) {
+              const vehicle = Array.isArray(orderDetails.vehiculos) 
+                ? orderDetails.vehiculos[0] 
+                : orderDetails.vehiculos;
+              
+              if (vehicle) {
+                const client = Array.isArray(vehicle.clientes)
+                  ? vehicle.clientes[0]
+                  : vehicle.clientes;
+
+                if (client && client.telefono) {
+                  // 3. Fetch template
+                  const { data: templateData, error: templateErr } = await supabase
+                    .from('plantillas_notificacion')
+                    .select('contenido')
+                    .eq('id', 'auto_listo')
+                    .single();
+
+                  if (!templateErr && templateData) {
+                    const vehicleName = `${vehicle.marca} ${vehicle.modelo} (${vehicle.placas})`;
+                    const message = templateData.contenido
+                      .replace('{{cliente}}', client.nombre)
+                      .replace('{{vehiculo}}', vehicleName)
+                      .replace('{{kilometraje}}', orderDetails.kilometraje_ingreso.toString());
+
+                    // 4. Enqueue notification
+                    await supabase
+                      .from('cola_notificaciones')
+                      .insert({
+                        telefono: client.telefono,
+                        mensaje: message,
+                        estado: 'Pendiente'
+                      });
+                    console.log('Notificación de auto listo encolada exitosamente');
+                  }
+                }
+              }
+            }
+          }
+        } catch (autoErr) {
+          console.error('Error executing automation rule avisar_auto_listo:', autoErr);
+        }
+      }
       
       // Update local state directly
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, estado: nextStatus } : o));
