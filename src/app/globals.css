@@ -73,3 +73,37 @@ body {
 .dense-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #CBD5E1;
 }
+
+/* Media Carta Premium Printing Layout */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #111111 !important;
+  }
+  /* Hide all normal UI elements during print */
+  main, header, footer, nav, button, select, input, div:not(#print-section):not(#print-section *) {
+    display: none !important;
+  }
+  #print-section, #print-section * {
+    display: block !important;
+    visibility: visible !important;
+  }
+  #print-section {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 5.5in;
+    height: 8.5in;
+    margin: 0;
+    padding: 0.3in;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    background: #FFFFFF;
+    color: #111111;
+    box-sizing: border-box;
+  }
+  @page {
+    size: 5.5in 8.5in;
+    margin: 0;
+  }
+}
+

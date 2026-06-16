@@ -18,6 +18,8 @@ import {
   Loader2,
   AlertTriangle
 } from 'lucide-react';
+import ModalAltaExpress from './ModalAltaExpress';
+import { createPortal } from 'react-dom';
 
 export interface QuoteItem {
   tire: Tire;
@@ -152,6 +154,39 @@ export default function QuoteBuilder({
   const [whatsappSent, setWhatsappSent] = useState(false);
   const [pdfGenerated, setPdfGenerated] = useState(false);
 
+  // Phase 6 States
+  const [isAltaExpressOpen, setIsAltaExpressOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Tarjeta' | 'Transferencia'>('Efectivo');
+  const [amountReceived, setAmountReceived] = useState<string>('');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [lastSaleInfo, setLastSaleInfo] = useState<{
+    folio: string;
+    fecha: string;
+    total: number;
+    metodoPago: string;
+    montoRecibido: number;
+    cambio: number;
+    cliente: string;
+    telefono: string;
+    placas: string;
+    marca: string;
+    modelo: string;
+    items: QuoteItem[];
+    servicios: {
+      alineacion: boolean;
+      nitrogeno: boolean;
+      balatas: boolean;
+    };
+  } | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
   // Vehicle Clinic Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState<'history' | 'specs'>('history');
@@ -187,48 +222,53 @@ export default function QuoteBuilder({
   };
 
   // Fetch clients and their vehicles
-  useEffect(() => {
-    const fetchClientsAndVehicles = async () => {
-      try {
-        setLoadingData(true);
-        // Query clients
-        const { data: clientsData, error: clientErr } = await supabase
-          .from('clientes')
-          .select('*')
-          .order('nombre', { ascending: true });
+  const fetchClientsAndVehicles = async (selectNewClientId?: string, selectNewVehicleId?: string) => {
+    try {
+      setLoadingData(true);
+      // Query clients
+      const { data: clientsData, error: clientErr } = await supabase
+        .from('clientes')
+        .select('*')
+        .order('nombre', { ascending: true });
 
-        if (clientErr) throw clientErr;
+      if (clientErr) throw clientErr;
 
-        if (clientsData && clientsData.length > 0) {
-          // Query vehicles for these clients
-          const { data: vehiclesData, error: vehicleErr } = await supabase
-            .from('vehiculos')
-            .select('*');
+      if (clientsData && clientsData.length > 0) {
+        // Query vehicles for these clients
+        const { data: vehiclesData, error: vehicleErr } = await supabase
+          .from('vehiculos')
+          .select('*');
 
-          if (vehicleErr) throw vehicleErr;
+        if (vehicleErr) throw vehicleErr;
 
-          const formatted: Client[] = clientsData.map((client: any) => ({
-            ...client,
-            vehiculos: vehiclesData?.filter((v: any) => v.cliente_id === client.id) || []
-          }));
+        const formatted: Client[] = clientsData.map((client: any) => ({
+          ...client,
+          vehiculos: vehiclesData?.filter((v: any) => v.cliente_id === client.id) || []
+        }));
 
-          setClients(formatted);
-          if (formatted.length > 0) {
-            setSelectedClientId(formatted[0].id);
+        setClients(formatted);
+        if (selectNewClientId) {
+          setSelectedClientId(selectNewClientId);
+          if (selectNewVehicleId) {
+            setSelectedVehicleId(selectNewVehicleId);
           }
-        } else {
-          setClients(MOCK_CLIENTS);
-          setSelectedClientId(MOCK_CLIENTS[0].id);
+        } else if (formatted.length > 0 && !selectedClientId) {
+          setSelectedClientId(formatted[0].id);
         }
-      } catch (err) {
-        console.error('Error fetching relational data, falling back:', err);
+      } else {
         setClients(MOCK_CLIENTS);
         setSelectedClientId(MOCK_CLIENTS[0].id);
-      } finally {
-        setLoadingData(false);
       }
-    };
+    } catch (err) {
+      console.error('Error fetching relational data, falling back:', err);
+      setClients(MOCK_CLIENTS);
+      setSelectedClientId(MOCK_CLIENTS[0].id);
+    } finally {
+      setLoadingData(false);
+    }
+  };
 
+  useEffect(() => {
     fetchClientsAndVehicles();
   }, []);
 
@@ -428,6 +468,342 @@ export default function QuoteBuilder({
     setTimeout(() => setPdfGenerated(false), 3000);
   };
 
+  const handleAltaExpressSuccess = async (newClientId: string, newVehicleId: string) => {
+    await fetchClientsAndVehicles(newClientId, newVehicleId);
+    addLog('Alta Express exitosa: Cliente y vehículo creados y asignados', 'success');
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!currentClient || !currentVehicle || selectedItems.length === 0) {
+      alert('Por favor selecciona un cliente y un vehículo con items en el carrito.');
+      return;
+    }
+
+    const calculatedChange = paymentMethod === 'Efectivo'
+      ? Math.max(0, (parseFloat(amountReceived) || 0) - grandTotal)
+      : 0;
+
+    setIsProcessingPayment(true);
+
+    try {
+      const cleanVendedorId = vendedorId === 'admin-demo-id' || !vendedorId
+        ? 'b001bc99-9c0b-4ef8-bb6d-6bb9bd380e51' // Sofía
+        : vendedorId;
+
+      // 1. Guardar la cotización en Supabase con estatus 'Pagada'
+      const { data: quote, error: qErr } = await supabase
+        .from('cotizaciones')
+        .insert({
+          cliente_id: selectedClientId,
+          vehiculo_id: selectedVehicleId,
+          total: grandTotal,
+          estatus: 'Pagada',
+          vendedor_id: cleanVendedorId
+        })
+        .select()
+        .single();
+
+      if (qErr) throw qErr;
+
+      // 2. Guardar los detalles de la cotización
+      const details = selectedItems.map(item => ({
+        cotizacion_id: quote.id,
+        llanta_id: item.tire.id,
+        cantidad: item.cantidad,
+        precio_unitario: item.precioUnitario,
+        subtotal: item.precioUnitario * item.cantidad
+      }));
+
+      const { error: dErr } = await supabase
+        .from('detalles_cotizacion')
+        .insert(details);
+
+      if (dErr) throw dErr;
+
+      // 3. Decrementar existencias del inventario físico 'inventario_llantas'
+      for (const item of selectedItems) {
+        const { data: tireData, error: getErr } = await supabase
+          .from('inventario_llantas')
+          .select('stock_actual')
+          .eq('id', item.tire.id)
+          .single();
+
+        if (getErr) throw getErr;
+
+        const currentStock = tireData ? tireData.stock_actual : item.tire.stock_actual;
+        const newStock = Math.max(0, currentStock - item.cantidad);
+
+        const { error: updErr } = await supabase
+          .from('inventario_llantas')
+          .update({ stock_actual: newStock })
+          .eq('id', item.tire.id);
+
+        if (updErr) throw updErr;
+      }
+
+      // 4. Guardar información para el ticket impreso y visual
+      const folioShort = quote.id.substring(0, 8).toUpperCase();
+      setLastSaleInfo({
+        folio: `COVA-${folioShort}`,
+        fecha: new Date().toLocaleString('es-MX'),
+        total: grandTotal,
+        metodoPago: paymentMethod,
+        montoRecibido: paymentMethod === 'Efectivo' ? (parseFloat(amountReceived) || 0) : grandTotal,
+        cambio: calculatedChange,
+        cliente: currentClient.nombre,
+        telefono: currentClient.telefono,
+        placas: currentVehicle.placas,
+        marca: currentVehicle.marca,
+        modelo: currentVehicle.modelo,
+        items: [...selectedItems],
+        servicios: {
+          alineacion: serviceAlignment,
+          nitrogeno: serviceNitrogen,
+          balatas: serviceBrakes
+        }
+      });
+
+      addLog(`Venta registrada y pagada por $${grandTotal.toFixed(2)} (Folio: COVA-${folioShort})`, 'success');
+
+      // Limpiar estados de servicios y el carrito
+      setServiceAlignment(false);
+      setServiceNitrogen(false);
+      setServiceBrakes(false);
+      onClearQuote();
+      
+      setIsCheckoutOpen(false);
+      setCheckoutSuccess(true);
+    } catch (err: any) {
+      console.error('Error al registrar venta POS:', err);
+      alert(`Error al registrar el cobro: ${err.message || 'Error desconocido'}`);
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  if (checkoutSuccess && lastSaleInfo) {
+    const totalTires = lastSaleInfo.items.reduce((acc, item) => acc + item.cantidad, 0);
+    const formattedTotal = lastSaleInfo.total.toLocaleString('es-MX', { minimumFractionDigits: 2 });
+    const formattedSubtotal = (lastSaleInfo.total / 1.16).toLocaleString('es-MX', { minimumFractionDigits: 2 });
+    const formattedIva = (lastSaleInfo.total - (lastSaleInfo.total / 1.16)).toLocaleString('es-MX', { minimumFractionDigits: 2 });
+
+    return (
+      <div className="panel-card p-5 flex flex-col h-full bg-white animate-in fade-in duration-200">
+        <div className="flex flex-col items-center text-center pb-5 mb-5 border-b-hairline">
+          <div className="w-10 h-10 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-3">
+            <Check className="w-5 h-5 text-emerald-600 animate-bounce" />
+          </div>
+          <h2 className="text-sm font-bold tracking-tight text-charcoal uppercase tracking-wider font-mono">
+            Venta POS Exitosa
+          </h2>
+          <p className="text-[11px] text-charcoal-light font-mono mt-1">
+            Folio: {lastSaleInfo.folio} • {lastSaleInfo.fecha}
+          </p>
+        </div>
+
+        {/* Client / Vehicle summary */}
+        <div className="bg-neutral-50 border border-hairline rounded p-3 mb-4 text-xs space-y-1">
+          <p className="text-charcoal"><strong className="font-semibold text-neutral-400 font-mono text-[9px] uppercase block">Cliente</strong>{lastSaleInfo.cliente} ({lastSaleInfo.telefono})</p>
+          <p className="text-charcoal pt-1.5 border-t border-dashed border-neutral-200 mt-1.5"><strong className="font-semibold text-neutral-400 font-mono text-[9px] uppercase block">Vehículo</strong>{lastSaleInfo.marca} {lastSaleInfo.modelo} • Placas: <span className="font-mono font-bold text-cova-blue">{lastSaleInfo.placas}</span></p>
+        </div>
+
+        {/* Ticket Preview Box */}
+        <div className="flex-1 flex flex-col mb-4">
+          <label className="text-[10px] font-semibold text-charcoal-light/60 uppercase tracking-wider mb-2">
+            Vista Previa de Recibo (Media Carta)
+          </label>
+          <div className="flex-1 border border-hairline rounded bg-neutral-100/50 p-4 overflow-auto max-h-[220px] dense-scrollbar font-mono text-[10px] text-charcoal leading-relaxed shadow-inner">
+            <div className="bg-white border border-neutral-300 rounded p-4 mx-auto max-w-[280px] min-h-[300px] shadow-sm select-none">
+              {/* Small preview simulation */}
+              <div className="text-center border-b border-dashed border-neutral-300 pb-2 mb-2">
+                <span className="font-bold tracking-widest text-xs">LLANTERA COVA</span>
+                <p className="text-[8px] text-neutral-400 m-0">Tres Ríos, Culiacán</p>
+              </div>
+              <div className="flex justify-between text-[8px] text-neutral-400 mb-2">
+                <span>FOLIO: {lastSaleInfo.folio}</span>
+                <span>{lastSaleInfo.fecha.split(', ')[1] || ''}</span>
+              </div>
+              <div className="space-y-1 mb-2 text-[9px]">
+                {lastSaleInfo.items.map((item, idx) => (
+                  <div key={idx} className="flex justify-between">
+                    <span>{item.cantidad}x {item.tire.marca} {item.tire.modelo_llanta}</span>
+                    <span>${(item.cantidad * item.precioUnitario).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                ))}
+                {lastSaleInfo.servicios.alineacion && (
+                  <div className="flex justify-between text-[9px]">
+                    <span>1x Alineación Premium</span>
+                    <span>{totalTires >= 4 ? '$0.00' : '$1,200.00'}</span>
+                  </div>
+                )}
+                {lastSaleInfo.servicios.nitrogeno && (
+                  <div className="flex justify-between text-[9px]">
+                    <span>1x Nitrógeno Automotriz</span>
+                    <span>$250.00</span>
+                  </div>
+                )}
+                {lastSaleInfo.servicios.balatas && (
+                  <div className="flex justify-between text-[9px]">
+                    <span>1x Servicio Balatas</span>
+                    <span>$1,800.00</span>
+                  </div>
+                )}
+              </div>
+              <div className="border-t border-dashed border-neutral-300 pt-2 text-[9px] font-bold text-right flex flex-col items-end">
+                <div className="w-24 flex justify-between font-bold">
+                  <span>TOTAL:</span>
+                  <span>${lastSaleInfo.total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                </div>
+                {lastSaleInfo.metodoPago === 'Efectivo' && (
+                  <>
+                    <div className="w-24 flex justify-between text-neutral-400 font-normal text-[8px]">
+                      <span>EFECTIVO:</span>
+                      <span>${lastSaleInfo.montoRecibido.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="w-24 flex justify-between text-emerald-600 font-bold text-[9px]">
+                      <span>CAMBIO:</span>
+                      <span>${lastSaleInfo.cambio.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Success Actions */}
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={() => window.print()}
+            className="w-full py-2.5 text-xs font-semibold text-white bg-cova-blue hover:bg-cova-blue/95 border border-cova-blue hover:shadow-md rounded cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6" />
+              <rect x="6" y="14" width="12" height="8" rx="1" />
+            </svg>
+            <span>Imprimir Nota (Media Carta)</span>
+          </button>
+          
+          <button
+            onClick={() => {
+              setCheckoutSuccess(false);
+              setLastSaleInfo(null);
+            }}
+            className="w-full py-2 text-xs font-semibold text-charcoal hover:bg-neutral-50 border border-hairline rounded cursor-pointer"
+          >
+            Nueva Cotización / Venta
+          </button>
+        </div>
+
+        {/* Hidden Printable Ticket rendered at the body level */}
+        {mounted && typeof document !== 'undefined' && createPortal(
+          <div id="print-section" className="hidden print:block">
+            <div style={{ fontFamily: 'monospace', fontSize: '11px', color: '#111111', lineHeight: '1.4' }}>
+              <div style={{ textAlign: 'center', borderBottom: '1px dashed #111111', paddingBottom: '10px', marginBottom: '10px' }}>
+                <h1 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 0 4px 0', letterSpacing: '1px' }}>LLANTERA COVA</h1>
+                <p style={{ margin: '2px 0' }}>Sucursal Tres Ríos • Culiacán, Sin.</p>
+                <p style={{ margin: '2px 0' }}>Tel: 667-712-3456</p>
+                <p style={{ margin: '2px 0', fontWeight: 'bold', fontSize: '12px' }}>TICKET DE VENTA (POS)</p>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span><strong>FOLIO:</strong> {lastSaleInfo.folio}</span>
+                <span><strong>FECHA:</strong> {lastSaleInfo.fecha}</span>
+              </div>
+
+              <div style={{ borderBottom: '1px dashed #111111', paddingBottom: '8px', marginBottom: '8px' }}>
+                <p style={{ margin: '2px 0' }}><strong>CLIENTE:</strong> {lastSaleInfo.cliente}</p>
+                <p style={{ margin: '2px 0' }}><strong>TELÉFONO:</strong> {lastSaleInfo.telefono}</p>
+                <p style={{ margin: '2px 0' }}><strong>VEHÍCULO:</strong> {lastSaleInfo.marca} {lastSaleInfo.modelo} ({lastSaleInfo.placas})</p>
+              </div>
+
+              <div style={{ marginBottom: '8px' }}>
+                <div style={{ borderBottom: '1px dashed #111111', paddingBottom: '4px', fontWeight: 'bold', display: 'flex' }}>
+                  <span style={{ width: '40px' }}>CANT</span>
+                  <span style={{ flex: '1' }}>DESCRIPCIÓN</span>
+                  <span style={{ width: '60px', textAlign: 'right' }}>P.UNIT</span>
+                  <span style={{ width: '70px', textAlign: 'right' }}>IMPORTE</span>
+                </div>
+                {lastSaleInfo.items.map((item, idx) => (
+                  <div key={idx} style={{ display: 'flex', marginTop: '4px' }}>
+                    <span style={{ width: '40px' }}>{item.cantidad}</span>
+                    <span style={{ flex: '1' }}>{item.tire.marca} {item.tire.modelo_llanta} {item.tire.ancho}/{item.tire.perfil} R{item.tire.rin}</span>
+                    <span style={{ width: '60px', textAlign: 'right' }}>${item.precioUnitario.toFixed(2)}</span>
+                    <span style={{ width: '70px', textAlign: 'right' }}>${(item.cantidad * item.precioUnitario).toFixed(2)}</span>
+                  </div>
+                ))}
+
+                {lastSaleInfo.servicios.alineacion && (
+                  <div style={{ display: 'flex', marginTop: '4px' }}>
+                    <span style={{ width: '40px' }}>1</span>
+                    <span style={{ flex: '1' }}>Alineación y Balanceo Premium</span>
+                    <span style={{ width: '60px', textAlign: 'right' }}>
+                      {totalTires >= 4 ? '$0.00' : '$1,200.00'}
+                    </span>
+                    <span style={{ width: '70px', textAlign: 'right' }}>
+                      {totalTires >= 4 ? '$0.00' : '$1,200.00'}
+                    </span>
+                  </div>
+                )}
+                {lastSaleInfo.servicios.nitrogeno && (
+                  <div style={{ display: 'flex', marginTop: '4px' }}>
+                    <span style={{ width: '40px' }}>1</span>
+                    <span style={{ flex: '1' }}>Nitrógeno Automotriz</span>
+                    <span style={{ width: '60px', textAlign: 'right' }}>$250.00</span>
+                    <span style={{ width: '70px', textAlign: 'right' }}>$250.00</span>
+                  </div>
+                )}
+                {lastSaleInfo.servicios.balatas && (
+                  <div style={{ display: 'flex', marginTop: '4px' }}>
+                    <span style={{ width: '40px' }}>1</span>
+                    <span style={{ flex: '1' }}>Servicio de Frenos (Balatas)</span>
+                    <span style={{ width: '60px', textAlign: 'right' }}>$1,800.00</span>
+                    <span style={{ width: '70px', textAlign: 'right' }}>$1,800.00</span>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ borderTop: '1px dashed #111111', paddingTop: '8px', paddingBottom: '8px', borderBottom: '1px dashed #111111', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                <div style={{ width: '180px', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>SUBTOTAL:</span>
+                  <span>${formattedSubtotal}</span>
+                </div>
+                <div style={{ width: '180px', display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
+                  <span>IVA (16%):</span>
+                  <span>${formattedIva}</span>
+                </div>
+                <div style={{ width: '180px', display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontWeight: 'bold', fontSize: '12px' }}>
+                  <span>TOTAL NETO:</span>
+                  <span>${formattedTotal} MXN</span>
+                </div>
+              </div>
+
+              <div style={{ paddingBottom: '8px', marginBottom: '8px', marginTop: '8px' }}>
+                <p style={{ margin: '2px 0' }}><strong>MÉTODO DE PAGO:</strong> {lastSaleInfo.metodoPago}</p>
+                {lastSaleInfo.metodoPago === 'Efectivo' && (
+                  <>
+                    <p style={{ margin: '2px 0' }}><strong>RECIBIDO:</strong> ${lastSaleInfo.montoRecibido.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
+                    <p style={{ margin: '2px 0', fontWeight: 'bold' }}><strong>CAMBIO:</strong> ${lastSaleInfo.cambio.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
+                  </>
+                )}
+              </div>
+
+              <div style={{ textAlign: 'center', marginTop: '15px', borderTop: '1px dashed #111111', paddingTop: '10px', fontSize: '9px' }}>
+                <p style={{ fontWeight: 'bold', margin: '0 0 4px 0' }}>TÉRMINOS DE GARANTÍA</p>
+                <p style={{ margin: '2px 0' }}>1 año de garantía contra defectos de fábrica en llantas.</p>
+                <p style={{ margin: '2px 0' }}>No aplica por golpes, chipotes, cortes o mal camino.</p>
+                <p style={{ margin: '2px 0' }}>Garantía de 30 días en servicios de mano de obra.</p>
+                <p style={{ margin: '2px 0', fontStyle: 'italic', marginTop: '10px' }}>¡Gracias por su preferencia en Llantera Cova!</p>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="panel-card p-5 flex flex-col h-full bg-white">
       {/* Title block */}
@@ -446,27 +822,37 @@ export default function QuoteBuilder({
       {/* Client / Vehicle Selection Fields */}
       <div className="space-y-3 mb-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {/* Client Select */}
-          <div className="relative">
-            <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-charcoal-light/60 uppercase tracking-wider flex items-center gap-1">
-              <User className="w-2.5 h-2.5" />
-              <span>Cliente</span>
-            </label>
-            <select
-              value={selectedClientId}
-              onChange={(e) => setSelectedClientId(e.target.value)}
-              className="w-full bg-white border border-hairline rounded pt-4 pb-1 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 transition-colors appearance-none cursor-pointer"
+          {/* Client Select with Inline Button */}
+          <div className="flex gap-1.5 items-end">
+            <div className="relative flex-1">
+              <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-charcoal-light/60 uppercase tracking-wider flex items-center gap-1">
+                <User className="w-2.5 h-2.5" />
+                <span>Cliente</span>
+              </label>
+              <select
+                value={selectedClientId}
+                onChange={(e) => setSelectedClientId(e.target.value)}
+                className="w-full bg-white border border-hairline rounded pt-4 pb-1 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 transition-colors appearance-none cursor-pointer"
+              >
+                {loadingData ? (
+                  <option>Cargando clientes...</option>
+                ) : (
+                  clients.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nombre} ({c.telefono})
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsAltaExpressOpen(true)}
+              title="Alta Express de Cliente y Vehículo"
+              className="h-[34px] w-[34px] flex items-center justify-center bg-white hover:bg-neutral-50 border border-hairline hover:border-neutral-400 text-cova-blue hover:text-cova-blue/80 rounded transition-colors cursor-pointer flex-shrink-0"
             >
-              {loadingData ? (
-                <option>Cargando clientes...</option>
-              ) : (
-                clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nombre} ({c.telefono})
-                  </option>
-                ))
-              )}
-            </select>
+              <Plus className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Vehicle Select */}
@@ -737,6 +1123,28 @@ export default function QuoteBuilder({
         </button>
       </div>
 
+      {/* POS Checkout Button */}
+      <button
+        onClick={() => {
+          if (selectedItems.length === 0) return;
+          setPaymentMethod('Efectivo');
+          setAmountReceived('');
+          setIsCheckoutOpen(true);
+        }}
+        disabled={selectedItems.length === 0}
+        className={`w-full mt-3 text-xs font-bold flex items-center justify-center gap-2 px-3 py-3 rounded border transition-all ${
+          selectedItems.length === 0
+            ? 'bg-neutral-50 border-neutral-200 text-neutral-300 cursor-not-allowed'
+            : 'bg-cova-blue hover:bg-cova-blue/95 border-cova-blue text-white shadow-md cursor-pointer hover:-translate-y-0.5 hover:shadow-lg'
+        }`}
+      >
+        <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="1" x2="12" y2="23" />
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </svg>
+        <span>Proceder al Cobro (POS)</span>
+      </button>
+
       {/* Operational Audit Log timeline */}
       <div className="mt-5 border-t border-hairline pt-4 flex flex-col">
         <div className="flex items-center justify-between mb-2">
@@ -895,6 +1303,129 @@ export default function QuoteBuilder({
           </div>
         </div>
       )}
+
+      {/* Checkout POS Modal */}
+      {isCheckoutOpen && (
+        <div className="fixed inset-0 z-50 bg-charcoal/30 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border border-hairline rounded-lg w-full max-w-sm p-5 shadow-lg relative animate-in fade-in zoom-in-95 duration-200 flex flex-col gap-4 font-sans text-xs text-charcoal">
+            {/* Header */}
+            <button 
+              onClick={() => setIsCheckoutOpen(false)}
+              className="absolute right-4 top-4 text-neutral-400 hover:text-charcoal cursor-pointer"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+
+            <div className="flex items-center gap-2 border-b-hairline pb-3">
+              <svg className="w-4 h-4 text-cova-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+              <h3 className="text-xs font-bold text-charcoal uppercase tracking-wider font-mono">
+                Checkout de Venta (POS)
+              </h3>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-neutral-50 border border-hairline rounded p-3 text-center">
+                <span className="text-[10px] text-neutral-400 uppercase font-mono tracking-wider">Total a Cobrar</span>
+                <div className="text-xl font-bold font-mono text-charcoal mt-1">
+                  ${grandTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-xs font-normal text-charcoal-light">MXN</span>
+                </div>
+              </div>
+
+              <div className="relative">
+                <label className="absolute left-2.5 top-1.5 text-[8px] font-semibold text-charcoal-light/60 uppercase tracking-wider">
+                  Método de Pago
+                </label>
+                <select
+                  value={paymentMethod}
+                  onChange={(e) => {
+                    const val = e.target.value as 'Efectivo' | 'Tarjeta' | 'Transferencia';
+                    setPaymentMethod(val);
+                    if (val !== 'Efectivo') {
+                      setAmountReceived(grandTotal.toString());
+                    } else {
+                      setAmountReceived('');
+                    }
+                  }}
+                  className="w-full bg-white border border-hairline rounded pt-4 pb-1.5 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 cursor-pointer"
+                >
+                  <option value="Efectivo">Efectivo</option>
+                  <option value="Tarjeta">Tarjeta de Débito/Crédito</option>
+                  <option value="Transferencia">Transferencia Bancaria</option>
+                </select>
+              </div>
+
+              {paymentMethod === 'Efectivo' ? (
+                <div className="relative">
+                  <label className="absolute left-2.5 top-1.5 text-[8px] font-semibold text-charcoal-light/60 uppercase tracking-wider">
+                    Monto Recibido *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    step="0.01"
+                    placeholder="Ingrese cantidad en pesos"
+                    value={amountReceived}
+                    onChange={(e) => setAmountReceived(e.target.value)}
+                    className="w-full bg-white border border-hairline rounded pt-4 pb-1.5 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 font-mono font-bold"
+                  />
+                </div>
+              ) : (
+                <div className="relative bg-neutral-50/50 border border-hairline rounded p-2.5 flex justify-between items-center text-xs">
+                  <span className="text-neutral-400">Monto Cargado:</span>
+                  <span className="font-bold font-mono text-charcoal">${grandTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                </div>
+              )}
+
+              {paymentMethod === 'Efectivo' && (
+                <div className="border border-dashed border-hairline rounded p-2.5 bg-neutral-50/50 flex justify-between items-center font-mono">
+                  <span className="text-[10px] text-neutral-400 font-sans uppercase">Cambio a Entregar:</span>
+                  <span className={`text-sm font-bold ${
+                    parseFloat(amountReceived) >= grandTotal ? 'text-emerald-600' : 'text-red-500'
+                  }`}>
+                    {amountReceived && parseFloat(amountReceived) >= grandTotal
+                      ? `$${(parseFloat(amountReceived) - grandTotal).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`
+                      : amountReceived
+                        ? 'Monto insuficiente'
+                        : '$0.00'
+                    }
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 pt-3 border-t border-hairline mt-1">
+              <button
+                type="button"
+                onClick={() => setIsCheckoutOpen(false)}
+                className="flex-1 py-2 text-xs font-semibold text-charcoal hover:bg-neutral-50 border border-hairline rounded cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmPayment}
+                disabled={isProcessingPayment || (paymentMethod === 'Efectivo' && (!amountReceived || parseFloat(amountReceived) < grandTotal))}
+                className="flex-1 py-2 text-xs font-semibold text-ceramic bg-cova-blue border border-cova-blue hover:shadow-md rounded cursor-pointer flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {isProcessingPayment ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Check className="w-3.5 h-3.5 text-white" />
+                )}
+                <span>Confirmar Pago</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Alta Express */}
+      <ModalAltaExpress
+        isOpen={isAltaExpressOpen}
+        onClose={() => setIsAltaExpressOpen(false)}
+        onSuccess={handleAltaExpressSuccess}
+      />
     </div>
   );
 }
