@@ -2,6 +2,8 @@ import makeWASocket, { useMultiFileAuthState, DisconnectReason, Browsers, fetchL
 import { Boom } from '@hapi/boom';
 import qrcode from 'qrcode';
 import pino from 'pino';
+import fs from 'fs';
+import path from 'path';
 import { supabase } from './supabase';
 
 let globalClient: any = null;
@@ -325,4 +327,37 @@ export async function getWhatsAppStatus() {
     status: connectionStatus,
     qr: lastQr
   };
+}
+
+export async function logoutWhatsApp() {
+  console.log('Cerrando sesión de WhatsApp...');
+  try {
+    if (globalClient) {
+      try {
+        await globalClient.logout();
+      } catch (logoutErr: any) {
+        console.log('Error al enviar logout al socket, cerrando socket de forma forzada:', logoutErr.message);
+        try {
+          globalClient.end(undefined);
+        } catch (endErr) {}
+      }
+      globalClient = null;
+    }
+    
+    connectionStatus = 'Disconnected';
+    lastQr = null;
+
+    // Esperar 500ms para asegurar la liberación de descriptores de archivos
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const authDir = path.join(process.cwd(), 'auth_info_baileys');
+    if (fs.existsSync(authDir)) {
+      fs.rmSync(authDir, { recursive: true, force: true });
+      console.log('Directorio auth_info_baileys eliminado con éxito.');
+    }
+    return { success: true };
+  } catch (err: any) {
+    console.error('Error al desvincular dispositivo:', err);
+    return { success: false, error: err.message };
+  }
 }

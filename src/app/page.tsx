@@ -6,12 +6,13 @@ import QuoteBuilder, { QuoteItem } from '@/components/QuoteBuilder';
 import RecepcionTracker from '@/components/RecepcionTracker';
 import TallerBoard, { TallerBoardRef } from '@/components/TallerBoard';
 import CrmDashboard from '@/components/CrmDashboard';
+import InventarioDashboard from '@/components/InventarioDashboard';
 import { ShieldAlert, Compass, Calendar, ExternalLink, Eye, EyeOff } from 'lucide-react';
 
 export default function Home() {
   const [selectedItems, setSelectedItems] = useState<QuoteItem[]>([]);
   const [adminMode, setAdminMode] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'sales' | 'workshop' | 'crm'>('sales');
+  const [currentTab, setCurrentTab] = useState<'sales' | 'workshop' | 'crm' | 'inventory'>('sales');
 
   // Ref to taller board to trigger updates when a new vehicle is registered
   const tallerBoardRef = useRef<TallerBoardRef>(null);
@@ -179,6 +180,16 @@ export default function Home() {
           >
             CRM y WhatsApp
           </button>
+          <button
+            onClick={() => setCurrentTab('inventory')}
+            className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
+              currentTab === 'inventory'
+                ? 'border-cova-blue text-cova-blue font-bold'
+                : 'border-transparent text-neutral-400 hover:text-charcoal'
+            }`}
+          >
+            Catálogo e Inventario
+          </button>
         </div>
 
         {/* Conditionally rendered tab grids */}
@@ -219,8 +230,10 @@ export default function Home() {
               <TallerBoard ref={tallerBoardRef} />
             </div>
           </div>
-        ) : (
+        ) : currentTab === 'crm' ? (
           <CrmDashboard />
+        ) : (
+          <InventarioDashboard />
         )}
       </main>
 

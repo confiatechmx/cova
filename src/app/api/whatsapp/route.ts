@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getWhatsAppStatus, scanSixMonthReminders } from '@/lib/whatsapp';
+import { getWhatsAppStatus, scanSixMonthReminders, logoutWhatsApp } from '@/lib/whatsapp';
 import { supabase } from '@/lib/supabase';
 
 export async function GET() {
@@ -41,6 +41,15 @@ export async function POST(request: Request) {
     if (action === 'force_cron') {
       const enqueuedCount = await scanSixMonthReminders(true);
       return NextResponse.json({ success: true, enqueuedCount });
+    }
+
+    if (action === 'logout') {
+      const result = await logoutWhatsApp();
+      if (result.success) {
+        return NextResponse.json({ success: true });
+      } else {
+        return NextResponse.json({ error: result.error || 'Fallo al desvincular' }, { status: 500 });
+      }
     }
 
     return NextResponse.json({ error: 'Acción no válida' }, { status: 400 });

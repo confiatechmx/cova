@@ -48,6 +48,7 @@ export default function CrmDashboard() {
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [loadingQueue, setLoadingQueue] = useState(true);
   const [simulating, setSimulating] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // Automation Rules state
   const [rules, setRules] = useState<{ id: string; nombre: string; activa: boolean }[]>([]);
@@ -258,6 +259,49 @@ export default function CrmDashboard() {
     }
   };
 
+  const handleLogout = async () => {
+    if (!confirm('¿Seguro que deseas desvincular el dispositivo de WhatsApp? Se cerrará la sesión actual y se limpiará la caché local.')) return;
+    
+    setLoggingOut(true);
+    try {
+      const res = await fetch('/api/whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'logout' })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Fallo al desvincular');
+      
+      // Update local state instantly
+      setConnectionStatus('Disconnected');
+      setQrCode(null);
+      alert('Dispositivo desvinculado con éxito. Puedes escanear un nuevo número.');
+    } catch (err: any) {
+      console.error('Error logging out:', err);
+      alert(`Error al desvincular: ${err.message}`);
+    } finally {
+      setLoggingOut(false);
+      fetchStatus(false);
+    }
+  };
+
+  const handleRetryMessage = async (msgId: string) => {
+    try {
+      const { error } = await supabase
+        .from('cola_notificaciones')
+        .update({ estado: 'Pendiente' })
+        .eq('id', msgId);
+
+      if (error) throw error;
+      
+      // Update local state directly
+      setQueue(prev => prev.map(item => item.id === msgId ? { ...item, estado: 'Pendiente' } : item));
+    } catch (err) {
+      console.error('Error retrying message:', err);
+      alert('Error al reintentar el envío del mensaje.');
+    }
+  };
+
   const getRuleDescription = (ruleId: string) => {
     switch (ruleId) {
       case 'enviar_cotizacion_auto':
@@ -312,12 +356,20 @@ export default function CrmDashboard() {
         {/* QR Code / Connection Guide */}
         <div className="flex-1 flex flex-col items-center justify-center p-4 border border-hairline rounded bg-neutral-50/50">
           {connectionStatus === 'Connected' ? (
-            <div className="text-center py-6 px-4">
+            <div className="text-center py-6 px-4 flex flex-col items-center">
               <Check className="w-10 h-10 text-emerald-600 bg-emerald-50 rounded-full p-2 mx-auto mb-2 border border-emerald-100" />
               <p className="text-xs font-semibold text-charcoal">Canal Vinculado Exitosamente</p>
               <p className="text-[10px] text-charcoal-light mt-1 leading-relaxed max-w-[200px] mx-auto">
                 La pasarela local está enlazada y monitoreando la base de datos de Llantera Cova en segundo plano.
               </p>
+              
+              <button
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="mt-4 text-[9px] font-semibold text-red-600 hover:text-red-700 bg-white hover:bg-red-50 border border-hairline hover:border-red-200 px-3 py-1.5 rounded transition-all cursor-pointer shadow-sm disabled:opacity-50"
+              >
+                {loggingOut ? 'Desvinculando...' : 'Desvincular Dispositivo'}
+              </button>
             </div>
           ) : qrCode ? (
             <div className="text-center">
@@ -469,9 +521,21 @@ export default function CrmDashboard() {
                   <div key={item.id} className="p-2.5 hover:bg-white transition-colors flex flex-col gap-1 text-[10px] font-mono leading-relaxed">
                     <div className="flex items-center justify-between">
                       <span className="font-semibold text-charcoal font-sans">{item.telefono}</span>
-                      <span className={`px-1 rounded text-[8px] uppercase tracking-wider font-semibold ${statusBadge}`}>
-                        {item.estado}
-                      </span>
+                      
+                      <div className="flex items-center gap-1.5">
+                        {item.estado === 'Fallido' && (
+                          <button
+                            onClick={() => handleRetryMessage(item.id)}
+                            className="p-0.5 text-neutral-400 hover:text-cova-blue hover:bg-neutral-100 rounded transition-all cursor-pointer"
+                            title="Reintentar envío"
+                          >
+                            <RefreshCw className="w-2.5 h-2.5" />
+                          </button>
+                        )}
+                        <span className={`px-1 rounded text-[8px] uppercase tracking-wider font-semibold ${statusBadge}`}>
+                          {item.estado}
+                        </span>
+                      </div>
                     </div>
                     
                     <p className="text-charcoal-light text-[9px] line-clamp-2 leading-normal font-sans">

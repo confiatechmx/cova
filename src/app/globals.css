@@ -7,8 +7,8 @@
   --color-hairline: #E2E8F0;
   --color-cova-blue: #002D62; /* Azul Oscuro de logo.jpg */
   
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 :root {
