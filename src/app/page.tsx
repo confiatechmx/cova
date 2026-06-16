@@ -5,12 +5,13 @@ import TireSearch, { Tire } from '@/components/TireSearch';
 import QuoteBuilder, { QuoteItem } from '@/components/QuoteBuilder';
 import RecepcionTracker from '@/components/RecepcionTracker';
 import TallerBoard, { TallerBoardRef } from '@/components/TallerBoard';
+import CrmDashboard from '@/components/CrmDashboard';
 import { ShieldAlert, Compass, Calendar, ExternalLink, Eye, EyeOff } from 'lucide-react';
 
 export default function Home() {
   const [selectedItems, setSelectedItems] = useState<QuoteItem[]>([]);
   const [adminMode, setAdminMode] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'sales' | 'workshop'>('sales');
+  const [currentTab, setCurrentTab] = useState<'sales' | 'workshop' | 'crm'>('sales');
 
   // Ref to taller board to trigger updates when a new vehicle is registered
   const tallerBoardRef = useRef<TallerBoardRef>(null);
@@ -102,7 +103,7 @@ export default function Home() {
             <h1 className="text-xl font-bold tracking-tight text-charcoal flex items-center gap-2">
               <span>Módulo Core Operativo</span>
               <span className="text-[10px] bg-charcoal text-white font-mono font-semibold px-2 py-0.5 rounded tracking-widest uppercase">
-                v2.0.0
+                v3.0.0
               </span>
             </h1>
             <p className="text-xs text-charcoal-light mt-0.5">
@@ -168,6 +169,16 @@ export default function Home() {
           >
             Control de Taller
           </button>
+          <button
+            onClick={() => setCurrentTab('crm')}
+            className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
+              currentTab === 'crm'
+                ? 'border-cova-blue text-cova-blue font-bold'
+                : 'border-transparent text-neutral-400 hover:text-charcoal'
+            }`}
+          >
+            CRM y WhatsApp
+          </button>
         </div>
 
         {/* Conditionally rendered tab grids */}
@@ -188,7 +199,7 @@ export default function Home() {
               />
             </div>
           </div>
-        ) : (
+        ) : currentTab === 'workshop' ? (
           <div className="flex flex-col gap-5 flex-1">
             {/* Intake Reception Form */}
             <RecepcionTracker onOrderCreated={() => tallerBoardRef.current?.refreshBoard()} />
@@ -208,6 +219,8 @@ export default function Home() {
               <TallerBoard ref={tallerBoardRef} />
             </div>
           </div>
+        ) : (
+          <CrmDashboard />
         )}
       </main>
 
