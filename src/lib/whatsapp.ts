@@ -1,4 +1,4 @@
-import makeWASocket, { useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
+import makeWASocket, { useMultiFileAuthState, DisconnectReason, Browsers, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
 import qrcode from 'qrcode';
 import pino from 'pino';
@@ -264,8 +264,14 @@ async function initWhatsApp() {
   try {
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
 
+    // Fetch latest WhatsApp Web version to prevent handshake connection check errors
+    const { version, isLatest } = await fetchLatestBaileysVersion();
+    console.log(`Usando versión de WhatsApp Web: ${version.join('.')} (isLatest: ${isLatest})`);
+
     const sock = makeWASocket({
       auth: state,
+      version,
+      browser: Browsers.macOS('Desktop'),
       printQRInTerminal: false,
       logger: pino({ level: 'silent' })
     });
