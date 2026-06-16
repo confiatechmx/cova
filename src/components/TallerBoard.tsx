@@ -18,6 +18,7 @@ export interface BoardOrder {
     anio: number;
     placas: string;
   };
+  mecanico_id?: string;
 }
 
 export interface TallerBoardRef {
@@ -69,6 +70,7 @@ const MOCK_ORDERS: BoardOrder[] = [
 
 const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
   const [orders, setOrders] = useState<BoardOrder[]>([]);
+  const [mechanics, setMechanics] = useState<{ id: string; nombre: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
@@ -85,6 +87,7 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
           notas_recepcion,
           estado,
           fecha_ingreso,
+          mecanico_id,
           vehiculos (
             marca,
             modelo,
@@ -114,15 +117,33 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
     }
   };
 
+  const fetchMechanics = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('empleados')
+        .select('id, nombre')
+        .eq('rol', 'Mecánico')
+        .eq('activo', true)
+        .order('nombre', { ascending: true });
+      if (!error && data) {
+        setMechanics(data);
+      }
+    } catch (err) {
+      console.error('Error fetching mechanics:', err);
+    }
+  };
+
   // Expose the refresh action to parent component using imperitative handle
   useImperativeHandle(ref, () => ({
     refreshBoard() {
       fetchOrders();
+      fetchMechanics();
     }
   }));
 
   useEffect(() => {
     fetchOrders();
+    fetchMechanics();
   }, []);
 
   // Update order state (move card)
@@ -222,6 +243,23 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, estado: nextStatus } : o));
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const handleAssignMechanic = async (orderId: string, mecanicoId: string) => {
+    try {
+      const { error } = await supabase
+        .from('ordenes_servicio')
+        .update({ mecanico_id: mecanicoId })
+        .eq('id', orderId);
+
+      if (error) throw error;
+      
+      // Update local state directly
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, mecanico_id: mecanicoId } : o));
+    } catch (err) {
+      console.error('Error assigning mechanic:', err);
+      alert('Error al asignar el mecánico.');
     }
   };
 
@@ -329,6 +367,21 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
                           "{order.notas_recepcion}"
                         </div>
                       )}
+
+                      {/* Mechanic Assignment */}
+                      <div className="mt-1.5 flex items-center justify-between text-[10px]">
+                        <span className="text-neutral-400 font-sans">Mecánico Asignado:</span>
+                        <select
+                          value={order.mecanico_id || ''}
+                          onChange={(e) => handleAssignMechanic(order.id, e.target.value)}
+                          className="bg-white border border-hairline rounded px-1.5 py-0.5 text-[9px] text-charcoal focus:outline-none focus:border-neutral-400 cursor-pointer font-sans"
+                        >
+                          <option value="" disabled>Seleccionar...</option>
+                          {mechanics.map(m => (
+                            <option key={m.id} value={m.id}>{m.nombre}</option>
+                          ))}
+                        </select>
+                      </div>
 
                       {/* Action trigger button */}
                       <div className="mt-1 pt-2 border-t border-neutral-100 flex justify-end">

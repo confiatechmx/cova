@@ -30,6 +30,7 @@ interface QuoteBuilderProps {
   onRemoveItem: (tireId: string) => void;
   onUpdateQuantity: (tireId: string, delta: number) => void;
   onClearQuote: () => void;
+  vendedorId?: string;
 }
 
 interface Client {
@@ -131,7 +132,8 @@ export default function QuoteBuilder({
   selectedItems,
   onRemoveItem,
   onUpdateQuantity,
-  onClearQuote
+  onClearQuote,
+  vendedorId = 'b001bc99-9c0b-4ef8-bb6d-6bb9bd380e51'
 }: QuoteBuilderProps) {
   // Client & Vehicle selection state
   const [clients, setClients] = useState<Client[]>([]);
@@ -369,7 +371,8 @@ export default function QuoteBuilder({
           cliente_id: selectedClientId,
           vehiculo_id: selectedVehicleId,
           total: grandTotal,
-          estatus: 'Enviada'
+          estatus: 'Enviada',
+          vendedor_id: vendedorId
         })
         .select()
         .single();

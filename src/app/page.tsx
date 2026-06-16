@@ -1,21 +1,33 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import TireSearch, { Tire } from '@/components/TireSearch';
 import QuoteBuilder, { QuoteItem } from '@/components/QuoteBuilder';
 import RecepcionTracker from '@/components/RecepcionTracker';
 import TallerBoard, { TallerBoardRef } from '@/components/TallerBoard';
 import CrmDashboard from '@/components/CrmDashboard';
 import InventarioDashboard from '@/components/InventarioDashboard';
+import AdminDashboard from '@/components/AdminDashboard';
+import { useRoleAccess, UserRole } from '@/hooks/useRoleAccess';
 import { ShieldAlert, Compass, Calendar, ExternalLink, Eye, EyeOff } from 'lucide-react';
 
 export default function Home() {
+  const { role, user, changeRoleForDemo, isAdmin, isSales, isMechanic } = useRoleAccess();
   const [selectedItems, setSelectedItems] = useState<QuoteItem[]>([]);
   const [adminMode, setAdminMode] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'sales' | 'workshop' | 'crm' | 'inventory'>('sales');
+  const [currentTab, setCurrentTab] = useState<'sales' | 'workshop' | 'crm' | 'inventory' | 'admin'>('sales');
 
   // Ref to taller board to trigger updates when a new vehicle is registered
   const tallerBoardRef = useRef<TallerBoardRef>(null);
+
+  // Sync tab on role change to avoid vendedor/mecanico viewing restricted tabs
+  useEffect(() => {
+    if (isMechanic) {
+      setCurrentTab('workshop');
+    } else if (isSales && (currentTab === 'inventory' || currentTab === 'admin')) {
+      setCurrentTab('sales');
+    }
+  }, [role, isMechanic, isSales]);
 
   // Add a tire from Search Matrix to Quote
   const handleAddTire = (tire: Tire) => {
@@ -73,19 +85,35 @@ export default function Home() {
     day: 'numeric'
   });
 
+  const activeTab = isMechanic ? 'workshop' : currentTab;
+
   return (
     <div className="min-h-screen bg-ceramic text-charcoal flex flex-col antialiased">
       {/* Top Status Bar */}
-      <div className="bg-white border-b border-hairline py-2 px-4 flex items-center justify-between text-[10px] text-charcoal-light/70 font-mono tracking-tight">
+      <div className="bg-white border-b border-hairline py-2 px-4 flex items-center justify-between text-[10px] text-charcoal-light/70 font-mono tracking-tight select-none">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5 font-semibold text-charcoal">
             <Compass className="w-3.5 h-3.5 text-charcoal" />
             <span>Llantera Cova • Culiacán</span>
           </span>
           <span className="hidden sm:inline border-r border-hairline h-3"></span>
-          <span className="hidden sm:inline">Sucursal: Tres Ríos / Patio Operativo</span>
+          <span className="hidden sm:inline text-neutral-400">Usuario: <strong className="text-charcoal font-sans">{user.nombre}</strong></span>
         </div>
         <div className="flex items-center gap-3">
+          {/* Demo Role Selector */}
+          <div className="flex items-center gap-1 bg-neutral-100 border border-hairline rounded px-2 py-0.5 shadow-sm">
+            <span className="text-[9px] font-sans font-semibold text-neutral-400">Rol Demo:</span>
+            <select
+              value={role}
+              onChange={(e) => changeRoleForDemo(e.target.value as UserRole)}
+              className="bg-transparent border-none text-[9px] font-sans font-bold text-cova-blue focus:outline-none cursor-pointer"
+            >
+              <option value="Administrador">Administrador (Acceso Total)</option>
+              <option value="Vendedor">Vendedor (Mostrador)</option>
+              <option value="Mecánico">Mecánico (Patio)</option>
+            </select>
+          </div>
+
           <span className="flex items-center gap-1">
             <Calendar className="w-3.5 h-3.5 text-neutral-400" />
             <span className="capitalize">{currentDateFormatted}</span>
@@ -98,106 +126,140 @@ export default function Home() {
 
       {/* Main Container */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-5 flex flex-col gap-4">
-        {/* Header Brand Block */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b-hairline pb-4">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-charcoal flex items-center gap-2">
-              <span>Módulo Core Operativo</span>
-              <span className="text-[10px] bg-charcoal text-white font-mono font-semibold px-2 py-0.5 rounded tracking-widest uppercase">
-                v3.0.0
-              </span>
-            </h1>
-            <p className="text-xs text-charcoal-light mt-0.5">
-              Panel unificado de cotización, recepción de vehículos y control del flujo de taller en patio.
-            </p>
-          </div>
+        {/* Header Brand Block (Hidden for Mechanic) */}
+        {!isMechanic && (
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b-hairline pb-4">
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-charcoal flex items-center gap-2">
+                <span>Módulo Core Operativo</span>
+                <span className="text-[10px] bg-charcoal text-white font-mono font-semibold px-2 py-0.5 rounded tracking-widest uppercase">
+                  v3.5.0
+                </span>
+              </h1>
+              <p className="text-xs text-charcoal-light mt-0.5">
+                Panel unificado de cotización, recepción de vehículos y control del flujo de taller en patio.
+              </p>
+            </div>
 
-          {/* Controls: Admin toggle & Info bar */}
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Margins Toggle Switch (Only active in Sales tab) */}
-            {currentTab === 'sales' && (
-              <button
-                onClick={() => setAdminMode(!adminMode)}
-                className={`text-xs flex items-center gap-1.5 px-3 py-1.5 rounded border transition-all duration-200 select-none cursor-pointer ${
-                  adminMode
-                    ? 'bg-neutral-900 border-neutral-900 text-white shadow-sm'
-                    : 'bg-white border-hairline text-charcoal hover:bg-neutral-50 hover:border-neutral-300'
-                }`}
-              >
-                {adminMode ? (
-                  <>
-                    <EyeOff className="w-3.5 h-3.5 text-neutral-300" />
-                    <span>Ocultar Márgenes</span>
-                  </>
-                ) : (
-                  <>
-                    <Eye className="w-3.5 h-3.5 text-charcoal-light" />
-                    <span>Ver Métricas de Margen</span>
-                  </>
-                )}
-              </button>
-            )}
+            {/* Controls: Admin toggle & Info bar */}
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Margins Toggle Switch (Only active in Sales tab and for Admin) */}
+              {activeTab === 'sales' && isAdmin && (
+                <button
+                  onClick={() => setAdminMode(!adminMode)}
+                  className={`text-xs flex items-center gap-1.5 px-3 py-1.5 rounded border transition-all duration-200 select-none cursor-pointer ${
+                    adminMode
+                      ? 'bg-neutral-900 border-neutral-900 text-white shadow-sm'
+                      : 'bg-white border-hairline text-charcoal hover:bg-neutral-50 hover:border-neutral-300'
+                  }`}
+                >
+                  {adminMode ? (
+                    <>
+                      <EyeOff className="w-3.5 h-3.5 text-neutral-300" />
+                      <span>Ocultar Márgenes</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-3.5 h-3.5 text-charcoal-light" />
+                      <span>Ver Métricas de Margen</span>
+                    </>
+                  )}
+                </button>
+              )}
 
-            {/* Quick Info Badge */}
-            <div className="flex items-center gap-2 bg-neutral-100/50 border border-hairline rounded p-2 text-xs">
-              <ShieldAlert className="w-4 h-4 text-amber-600 flex-shrink-0" />
-              <div className="text-[11px] text-charcoal-light font-medium">
-                Optimizado para tablets y celulares en patio operativo.
+              {/* Quick Info Badge */}
+              <div className="flex items-center gap-2 bg-neutral-100/50 border border-hairline rounded p-2 text-xs">
+                <ShieldAlert className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <div className="text-[11px] text-charcoal-light font-medium">
+                  Optimizado para tablets y celulares en patio operativo.
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Navigation Tabs (Linear Light Mode) */}
-        <div className="flex border-b border-hairline mb-2 bg-white rounded p-1 shadow-sm">
-          <button
-            onClick={() => setCurrentTab('sales')}
-            className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
-              currentTab === 'sales'
-                ? 'border-cova-blue text-cova-blue font-bold'
-                : 'border-transparent text-neutral-400 hover:text-charcoal'
-            }`}
-          >
-            Ventas y Cotización
-          </button>
-          <button
-            onClick={() => setCurrentTab('workshop')}
-            className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
-              currentTab === 'workshop'
-                ? 'border-cova-blue text-cova-blue font-bold'
-                : 'border-transparent text-neutral-400 hover:text-charcoal'
-            }`}
-          >
-            Control de Taller
-          </button>
-          <button
-            onClick={() => setCurrentTab('crm')}
-            className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
-              currentTab === 'crm'
-                ? 'border-cova-blue text-cova-blue font-bold'
-                : 'border-transparent text-neutral-400 hover:text-charcoal'
-            }`}
-          >
-            CRM y WhatsApp
-          </button>
-          <button
-            onClick={() => setCurrentTab('inventory')}
-            className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
-              currentTab === 'inventory'
-                ? 'border-cova-blue text-cova-blue font-bold'
-                : 'border-transparent text-neutral-400 hover:text-charcoal'
-            }`}
-          >
-            Catálogo e Inventario
-          </button>
-        </div>
+        {/* Navigation Tabs (Hidden for Mechanic) */}
+        {!isMechanic && (
+          <div className="flex border-b border-hairline mb-2 bg-white rounded p-1 shadow-sm select-none">
+            <button
+              onClick={() => setCurrentTab('sales')}
+              className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
+                activeTab === 'sales'
+                  ? 'border-cova-blue text-cova-blue font-bold'
+                  : 'border-transparent text-neutral-400 hover:text-charcoal'
+              }`}
+            >
+              Ventas y Cotización
+            </button>
+            <button
+              onClick={() => setCurrentTab('workshop')}
+              className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
+                activeTab === 'workshop'
+                  ? 'border-cova-blue text-cova-blue font-bold'
+                  : 'border-transparent text-neutral-400 hover:text-charcoal'
+              }`}
+            >
+              Control de Taller
+            </button>
+            <button
+              onClick={() => setCurrentTab('crm')}
+              className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
+                activeTab === 'crm'
+                  ? 'border-cova-blue text-cova-blue font-bold'
+                  : 'border-transparent text-neutral-400 hover:text-charcoal'
+              }`}
+            >
+              CRM y WhatsApp
+            </button>
+            {isAdmin && (
+              <>
+                <button
+                  onClick={() => setCurrentTab('inventory')}
+                  className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
+                    activeTab === 'inventory'
+                      ? 'border-cova-blue text-cova-blue font-bold'
+                      : 'border-transparent text-neutral-400 hover:text-charcoal'
+                  }`}
+                >
+                  Catálogo e Inventario
+                </button>
+                <button
+                  onClick={() => setCurrentTab('admin')}
+                  className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
+                    activeTab === 'admin'
+                      ? 'border-cova-blue text-cova-blue font-bold'
+                      : 'border-transparent text-neutral-400 hover:text-charcoal'
+                  }`}
+                >
+                  Administración
+                </button>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Conditionally rendered tab grids */}
-        {currentTab === 'sales' ? (
+        {isMechanic ? (
+          <div className="flex flex-col gap-5 flex-1">
+            <div className="panel-card p-5 bg-white flex flex-col shadow-sm">
+              <div className="pb-3 mb-4 border-b-hairline flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold text-charcoal uppercase tracking-wider">
+                    Tablero Kanban de Control de Patio (Mecánico: {user.nombre})
+                  </h3>
+                  <p className="text-[11px] text-charcoal-light mt-0.5 font-mono">
+                    Vista operativa de trabajo asignada exclusivamente
+                  </p>
+                </div>
+              </div>
+              <TallerBoard ref={tallerBoardRef} />
+            </div>
+          </div>
+        ) : activeTab === 'sales' ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 items-start">
             {/* Advanced Specification Search (Matrix) - Takes 7/12 cols */}
             <div className="lg:col-span-7 h-full flex flex-col">
-              <TireSearch onAddTire={handleAddTire} adminMode={adminMode} />
+              <TireSearch onAddTire={handleAddTire} adminMode={adminMode && isAdmin} />
             </div>
 
             {/* Express Quote Builder - Takes 5/12 cols */}
@@ -207,10 +269,11 @@ export default function Home() {
                 onRemoveItem={handleRemoveItem}
                 onUpdateQuantity={handleUpdateQuantity}
                 onClearQuote={handleClearQuote}
+                vendedorId={user.id}
               />
             </div>
           </div>
-        ) : currentTab === 'workshop' ? (
+        ) : activeTab === 'workshop' ? (
           <div className="flex flex-col gap-5 flex-1">
             {/* Intake Reception Form */}
             <RecepcionTracker onOrderCreated={() => tallerBoardRef.current?.refreshBoard()} />
@@ -230,15 +293,17 @@ export default function Home() {
               <TallerBoard ref={tallerBoardRef} />
             </div>
           </div>
-        ) : currentTab === 'crm' ? (
+        ) : activeTab === 'crm' ? (
           <CrmDashboard />
-        ) : (
+        ) : activeTab === 'inventory' ? (
           <InventarioDashboard />
+        ) : (
+          <AdminDashboard />
         )}
       </main>
 
       {/* Footer minimal signature */}
-      <footer className="border-t border-hairline bg-white/70 py-4 px-4 text-center mt-auto text-[10px] text-charcoal-light/60 font-mono">
+      <footer className="border-t border-hairline bg-white/70 py-4 px-4 text-center mt-auto text-[10px] text-charcoal-light/60 font-mono select-none">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>© 2026 Llantera Cova. Todos los derechos reservados.</span>
           <span className="flex items-center gap-1 hover:text-charcoal cursor-pointer transition-colors">
@@ -250,3 +315,4 @@ export default function Home() {
     </div>
   );
 }
+
