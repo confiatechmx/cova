@@ -10,7 +10,7 @@ import InventarioDashboard from '@/components/InventarioDashboard';
 import AdminDashboard from '@/components/AdminDashboard';
 import PosHistoryDashboard from '@/components/PosHistoryDashboard';
 import { useRoleAccess, UserRole } from '@/hooks/useRoleAccess';
-import { ShieldAlert, Compass, Calendar, ExternalLink, Eye, EyeOff } from 'lucide-react';
+import { ShieldAlert, Compass, Calendar, ExternalLink, Eye, EyeOff, ShoppingCart, History, Wrench, MessageSquare, Package, Settings, Menu } from 'lucide-react';
 
 export default function Home() {
   const { role, user, changeRoleForDemo, isAdmin, isSales, isMechanic } = useRoleAccess();
@@ -126,7 +126,7 @@ export default function Home() {
       </div>
 
       {/* Main Container */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-5 flex flex-col gap-4">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-5 flex flex-col gap-4 pb-20 md:pb-5">
         {/* Header Brand Block (Hidden for Mechanic) */}
         {!isMechanic && (
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b-hairline pb-4">
@@ -179,9 +179,9 @@ export default function Home() {
           </div>
         )}
 
-        {/* Navigation Tabs (Hidden for Mechanic) */}
+        {/* Desktop Navigation Tabs (Hidden for Mechanic & Mobile) */}
         {!isMechanic && (
-          <div className="flex overflow-x-auto hide-scrollbar snap-x border-b border-hairline mb-2 bg-white rounded p-1 shadow-sm select-none">
+          <div className="hidden md:flex overflow-x-auto hide-scrollbar snap-x border-b border-hairline mb-2 bg-white rounded p-1 shadow-sm select-none">
             <button
               onClick={() => setCurrentTab('sales')}
               className={`whitespace-nowrap flex-shrink-0 snap-start py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
@@ -246,6 +246,77 @@ export default function Home() {
                 </button>
               </>
             )}
+          </div>
+        )}
+
+        {/* Mobile Bottom Navigation Bar */}
+        {!isMechanic && (
+          <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-hairline flex items-center justify-between px-2 pb-[env(safe-area-inset-bottom)] z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] overflow-x-auto hide-scrollbar">
+            <div className="flex items-center w-full min-w-max justify-around">
+              <button
+                onClick={() => setCurrentTab('sales')}
+                className={`flex flex-col items-center justify-center py-3 px-3 min-w-[64px] transition-colors ${
+                  activeTab === 'sales' ? 'text-cova-blue' : 'text-neutral-400 hover:text-charcoal'
+                }`}
+              >
+                <ShoppingCart className="w-5 h-5 mb-1" />
+                <span className="text-[9px] font-bold tracking-tight">Ventas</span>
+              </button>
+              
+              <button
+                onClick={() => setCurrentTab('history')}
+                className={`flex flex-col items-center justify-center py-3 px-3 min-w-[64px] transition-colors ${
+                  activeTab === 'history' ? 'text-cova-blue' : 'text-neutral-400 hover:text-charcoal'
+                }`}
+              >
+                <History className="w-5 h-5 mb-1" />
+                <span className="text-[9px] font-bold tracking-tight">Historial</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentTab('workshop')}
+                className={`flex flex-col items-center justify-center py-3 px-3 min-w-[64px] transition-colors ${
+                  activeTab === 'workshop' ? 'text-cova-blue' : 'text-neutral-400 hover:text-charcoal'
+                }`}
+              >
+                <Wrench className="w-5 h-5 mb-1" />
+                <span className="text-[9px] font-bold tracking-tight">Taller</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentTab('crm')}
+                className={`flex flex-col items-center justify-center py-3 px-3 min-w-[64px] transition-colors ${
+                  activeTab === 'crm' ? 'text-cova-blue' : 'text-neutral-400 hover:text-charcoal'
+                }`}
+              >
+                <MessageSquare className="w-5 h-5 mb-1" />
+                <span className="text-[9px] font-bold tracking-tight">CRM</span>
+              </button>
+
+              {isAdmin && (
+                <>
+                  <button
+                    onClick={() => setCurrentTab('inventory')}
+                    className={`flex flex-col items-center justify-center py-3 px-3 min-w-[64px] transition-colors ${
+                      activeTab === 'inventory' ? 'text-cova-blue' : 'text-neutral-400 hover:text-charcoal'
+                    }`}
+                  >
+                    <Package className="w-5 h-5 mb-1" />
+                    <span className="text-[9px] font-bold tracking-tight">Catálogo</span>
+                  </button>
+
+                  <button
+                    onClick={() => setCurrentTab('admin')}
+                    className={`flex flex-col items-center justify-center py-3 px-3 min-w-[64px] transition-colors ${
+                      activeTab === 'admin' ? 'text-cova-blue' : 'text-neutral-400 hover:text-charcoal'
+                    }`}
+                  >
+                    <Settings className="w-5 h-5 mb-1" />
+                    <span className="text-[9px] font-bold tracking-tight">Admin</span>
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         )}
 
