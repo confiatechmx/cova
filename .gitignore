@@ -43,3 +43,7 @@ next-env.d.ts
 # WhatsApp Web Session Storage
 /auth_info_baileys/
 
+# PWA
+/public/sw.js
+/public/sw.js.map
+/public/workbox-*.js
