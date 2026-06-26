@@ -8,6 +8,7 @@ import TallerBoard, { TallerBoardRef } from '@/components/TallerBoard';
 import CrmDashboard from '@/components/CrmDashboard';
 import InventarioDashboard from '@/components/InventarioDashboard';
 import AdminDashboard from '@/components/AdminDashboard';
+import PosHistoryDashboard from '@/components/PosHistoryDashboard';
 import { useRoleAccess, UserRole } from '@/hooks/useRoleAccess';
 import { ShieldAlert, Compass, Calendar, ExternalLink, Eye, EyeOff } from 'lucide-react';
 
@@ -15,7 +16,7 @@ export default function Home() {
   const { role, user, changeRoleForDemo, isAdmin, isSales, isMechanic } = useRoleAccess();
   const [selectedItems, setSelectedItems] = useState<QuoteItem[]>([]);
   const [adminMode, setAdminMode] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'sales' | 'workshop' | 'crm' | 'inventory' | 'admin'>('sales');
+  const [currentTab, setCurrentTab] = useState<'sales' | 'history' | 'workshop' | 'crm' | 'inventory' | 'admin'>('sales');
 
   // Ref to taller board to trigger updates when a new vehicle is registered
   const tallerBoardRef = useRef<TallerBoardRef>(null);
@@ -192,6 +193,16 @@ export default function Home() {
               Ventas y Cotización
             </button>
             <button
+              onClick={() => setCurrentTab('history')}
+              className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
+                activeTab === 'history'
+                  ? 'border-cova-blue text-cova-blue font-bold'
+                  : 'border-transparent text-neutral-400 hover:text-charcoal'
+              }`}
+            >
+              Historial de Ventas
+            </button>
+            <button
               onClick={() => setCurrentTab('workshop')}
               className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
                 activeTab === 'workshop'
@@ -273,6 +284,8 @@ export default function Home() {
               />
             </div>
           </div>
+        ) : activeTab === 'history' ? (
+          <PosHistoryDashboard />
         ) : activeTab === 'workshop' ? (
           <div className="flex flex-col gap-5 flex-1">
             {/* Intake Reception Form */}

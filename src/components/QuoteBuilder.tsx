@@ -145,9 +145,21 @@ export default function QuoteBuilder({
   const [loadingData, setLoadingData] = useState(true);
 
   // Additional services & package states
-  const [serviceAlignment, setServiceAlignment] = useState(false);
-  const [serviceNitrogen, setServiceNitrogen] = useState(false);
-  const [serviceBrakes, setServiceBrakes] = useState(false);
+  const [availableServices, setAvailableServices] = useState<any[]>([]);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<Set<string>>(new Set());
+
+  // Load dynamic services
+  useEffect(() => {
+    const fetchServices = async () => {
+      const { data } = await supabase
+        .from('servicios_taller')
+        .select('*')
+        .eq('activo', true)
+        .order('nombre');
+      if (data) setAvailableServices(data);
+    };
+    fetchServices();
+  }, []);
 
   // Action states
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -334,32 +346,34 @@ export default function QuoteBuilder({
   // Auto-log business rule triggers
   useEffect(() => {
     if (qualifiesForFreeAlignment && !prevPromoRef.current) {
-      addLog(`Regla aplicada: Paquete de Alineación y Balanceo Premium inyectado con costo $0.00`, 'success');
-      setServiceAlignment(true);
+      addLog(`Regla aplicada: Paquete en promoción inyectado con costo $0.00`, 'success');
+      const promoService = availableServices.find(s => s.aplica_promo_llantas);
+      if (promoService) {
+        setSelectedServiceIds(prev => {
+          const next = new Set(prev);
+          next.add(promoService.id);
+          return next;
+        });
+      }
     } else if (!qualifiesForFreeAlignment && prevPromoRef.current) {
-      addLog(`Regla removida: Descuento de Alineación por compra de 4 llantas cancelado`, 'warning');
+      addLog(`Regla removida: Descuento de servicio por compra de 4 llantas cancelado`, 'warning');
     }
     prevPromoRef.current = qualifiesForFreeAlignment;
-  }, [qualifiesForFreeAlignment]);
-
-  // Pricing constants (MXN)
-  const ALIGNMENT_PRICE = 1200.00; // Alignment + balancing normal price
-  const NITROGEN_PRICE = 250.00;
-  const BRAKES_PRICE = 1800.00;
+  }, [qualifiesForFreeAlignment, availableServices]);
 
   // Calculate pricing totals
   const subtotalTires = selectedItems.reduce((acc, item) => acc + (item.precioUnitario * item.cantidad), 0);
   
   let subtotalServices = 0;
-  if (serviceAlignment) {
-    subtotalServices += qualifiesForFreeAlignment ? 0 : ALIGNMENT_PRICE;
-  }
-  if (serviceNitrogen) {
-    subtotalServices += NITROGEN_PRICE;
-  }
-  if (serviceBrakes) {
-    subtotalServices += BRAKES_PRICE;
-  }
+  availableServices.forEach(srv => {
+    if (selectedServiceIds.has(srv.id)) {
+      if (srv.aplica_promo_llantas && qualifiesForFreeAlignment) {
+        subtotalServices += 0;
+      } else {
+        subtotalServices += Number(srv.precio);
+      }
+    }
+  });
 
   const grandTotal = subtotalTires + subtotalServices;
 
@@ -563,19 +577,18 @@ export default function QuoteBuilder({
         marca: currentVehicle.marca,
         modelo: currentVehicle.modelo,
         items: [...selectedItems],
-        servicios: {
-          alineacion: serviceAlignment,
-          nitrogeno: serviceNitrogen,
-          balatas: serviceBrakes
-        }
+        serviciosGenericos: availableServices
+          .filter(s => selectedServiceIds.has(s.id))
+          .map(s => ({
+            nombre: s.nombre,
+            precio: (s.aplica_promo_llantas && qualifiesForFreeAlignment) ? 0 : Number(s.precio)
+          }))
       });
 
       addLog(`Venta registrada y pagada por $${grandTotal.toFixed(2)} (Folio: COVA-${folioShort})`, 'success');
 
       // Limpiar estados de servicios y el carrito
-      setServiceAlignment(false);
-      setServiceNitrogen(false);
-      setServiceBrakes(false);
+      setSelectedServiceIds(new Set());
       onClearQuote();
       
       setIsCheckoutOpen(false);
@@ -637,24 +650,12 @@ export default function QuoteBuilder({
                     <span>${(item.cantidad * item.precioUnitario).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
                   </div>
                 ))}
-                {lastSaleInfo.servicios.alineacion && (
-                  <div className="flex justify-between text-[9px]">
-                    <span>1x Alineación Premium</span>
-                    <span>{totalTires >= 4 ? '$0.00' : '$1,200.00'}</span>
+                {lastSaleInfo.serviciosGenericos?.map((srv: any, idx: number) => (
+                  <div key={idx} className="flex justify-between text-[9px]">
+                    <span>1x {srv.nombre}</span>
+                    <span>${srv.precio.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
                   </div>
-                )}
-                {lastSaleInfo.servicios.nitrogeno && (
-                  <div className="flex justify-between text-[9px]">
-                    <span>1x Nitrógeno Automotriz</span>
-                    <span>$250.00</span>
-                  </div>
-                )}
-                {lastSaleInfo.servicios.balatas && (
-                  <div className="flex justify-between text-[9px]">
-                    <span>1x Servicio Balatas</span>
-                    <span>$1,800.00</span>
-                  </div>
-                )}
+                ))}
               </div>
               <div className="border-t border-dashed border-neutral-300 pt-2 text-[9px] font-bold text-right flex flex-col items-end">
                 <div className="w-24 flex justify-between font-bold">
@@ -741,34 +742,14 @@ export default function QuoteBuilder({
                   </div>
                 ))}
 
-                {lastSaleInfo.servicios.alineacion && (
-                  <div style={{ display: 'flex', marginTop: '4px' }}>
+                {lastSaleInfo.serviciosGenericos?.map((srv: any, idx: number) => (
+                  <div key={idx} style={{ display: 'flex', marginTop: '4px' }}>
                     <span style={{ width: '40px' }}>1</span>
-                    <span style={{ flex: '1' }}>Alineación y Balanceo Premium</span>
-                    <span style={{ width: '60px', textAlign: 'right' }}>
-                      {totalTires >= 4 ? '$0.00' : '$1,200.00'}
-                    </span>
-                    <span style={{ width: '70px', textAlign: 'right' }}>
-                      {totalTires >= 4 ? '$0.00' : '$1,200.00'}
-                    </span>
+                    <span style={{ flex: '1' }}>{srv.nombre}</span>
+                    <span style={{ width: '60px', textAlign: 'right' }}>${srv.precio.toFixed(2)}</span>
+                    <span style={{ width: '70px', textAlign: 'right' }}>${srv.precio.toFixed(2)}</span>
                   </div>
-                )}
-                {lastSaleInfo.servicios.nitrogeno && (
-                  <div style={{ display: 'flex', marginTop: '4px' }}>
-                    <span style={{ width: '40px' }}>1</span>
-                    <span style={{ flex: '1' }}>Nitrógeno Automotriz</span>
-                    <span style={{ width: '60px', textAlign: 'right' }}>$250.00</span>
-                    <span style={{ width: '70px', textAlign: 'right' }}>$250.00</span>
-                  </div>
-                )}
-                {lastSaleInfo.servicios.balatas && (
-                  <div style={{ display: 'flex', marginTop: '4px' }}>
-                    <span style={{ width: '40px' }}>1</span>
-                    <span style={{ flex: '1' }}>Servicio de Frenos (Balatas)</span>
-                    <span style={{ width: '60px', textAlign: 'right' }}>$1,800.00</span>
-                    <span style={{ width: '70px', textAlign: 'right' }}>$1,800.00</span>
-                  </div>
-                )}
+                ))}
               </div>
 
               <div style={{ borderTop: '1px dashed #111111', paddingTop: '8px', paddingBottom: '8px', borderBottom: '1px dashed #111111', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
@@ -1008,78 +989,46 @@ export default function QuoteBuilder({
           )}
         </div>
 
-        {/* Alignment package */}
-        <div 
-          onClick={() => setServiceAlignment(!serviceAlignment)}
-          className={`flex items-center justify-between p-2 rounded border transition-all cursor-pointer select-none ${
-            serviceAlignment
-              ? 'border-neutral-400 bg-neutral-50'
-              : 'border-hairline bg-white hover:bg-neutral-50/50'
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            {serviceAlignment ? (
-              <CheckSquare className="w-4 h-4 text-charcoal" />
-            ) : (
-              <Square className="w-4 h-4 text-neutral-300" />
-            )}
-            <div>
-              <p className="text-xs font-semibold text-charcoal">Alineación y Balanceo Premium</p>
-              <p className="text-[9px] text-charcoal-light/75">
-                {qualifiesForFreeAlignment ? 'Ahorro: -$1,200 (Cortesia)' : 'Alineación + Balanceo 4 neumáticos'}
-              </p>
+        {availableServices.map(srv => {
+          const isSelected = selectedServiceIds.has(srv.id);
+          const isPromo = srv.aplica_promo_llantas && qualifiesForFreeAlignment;
+          
+          return (
+            <div 
+              key={srv.id}
+              onClick={() => {
+                setSelectedServiceIds(prev => {
+                  const next = new Set(prev);
+                  if (next.has(srv.id)) next.delete(srv.id);
+                  else next.add(srv.id);
+                  return next;
+                });
+              }}
+              className={`flex items-center justify-between p-2 rounded border transition-all cursor-pointer select-none ${
+                isSelected
+                  ? 'border-neutral-400 bg-neutral-50'
+                  : 'border-hairline bg-white hover:bg-neutral-50/50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {isSelected ? (
+                  <CheckSquare className="w-4 h-4 text-charcoal" />
+                ) : (
+                  <Square className="w-4 h-4 text-neutral-300" />
+                )}
+                <div>
+                  <p className="text-xs font-semibold text-charcoal">{srv.nombre}</p>
+                  <p className="text-[9px] text-charcoal-light/75 max-w-[200px] truncate">
+                    {srv.descripcion || 'Servicio de taller'}
+                  </p>
+                </div>
+              </div>
+              <span className={`text-xs font-mono font-bold ${isPromo ? 'text-emerald-600' : 'text-charcoal'}`}>
+                {isPromo ? '¡GRATIS!' : `$${Number(srv.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`}
+              </span>
             </div>
-          </div>
-          <span className={`text-xs font-mono font-bold ${qualifiesForFreeAlignment ? 'text-emerald-600' : 'text-charcoal'}`}>
-            {qualifiesForFreeAlignment ? '¡GRATIS!' : '$1,200.00'}
-          </span>
-        </div>
-
-        {/* Nitrogen Package */}
-        <div 
-          onClick={() => setServiceNitrogen(!serviceNitrogen)}
-          className={`flex items-center justify-between p-2 rounded border transition-all cursor-pointer select-none ${
-            serviceNitrogen
-              ? 'border-neutral-400 bg-neutral-50'
-              : 'border-hairline bg-white hover:bg-neutral-50/50'
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            {serviceNitrogen ? (
-              <CheckSquare className="w-4 h-4 text-charcoal" />
-            ) : (
-              <Square className="w-4 h-4 text-neutral-300" />
-            )}
-            <div>
-              <p className="text-xs font-semibold text-charcoal">Nitrógeno Automotriz</p>
-              <p className="text-[9px] text-charcoal-light/75">Presión estable y mayor durabilidad de hule</p>
-            </div>
-          </div>
-          <span className="text-xs font-mono font-bold text-charcoal">$250.00</span>
-        </div>
-
-        {/* Brake Service */}
-        <div 
-          onClick={() => setServiceBrakes(!serviceBrakes)}
-          className={`flex items-center justify-between p-2 rounded border transition-all cursor-pointer select-none ${
-            serviceBrakes
-              ? 'border-neutral-400 bg-neutral-50'
-              : 'border-hairline bg-white hover:bg-neutral-50/50'
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            {serviceBrakes ? (
-              <CheckSquare className="w-4 h-4 text-charcoal" />
-            ) : (
-              <Square className="w-4 h-4 text-neutral-300" />
-            )}
-            <div>
-              <p className="text-xs font-semibold text-charcoal">Servicio de Frenos (Balatas)</p>
-              <p className="text-[9px] text-charcoal-light/75">Limpieza, rectificación y cambio de balatas eje delantero</p>
-            </div>
-          </div>
-          <span className="text-xs font-mono font-bold text-charcoal">$1,800.00</span>
-        </div>
+          );
+        })}
       </div>
 
       {/* Quote summary block */}

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import ServicesCRUD from './ServicesCRUD';
 import { 
   Users, 
   UserPlus, 
@@ -58,6 +59,9 @@ export default function AdminDashboard() {
   const [mecanicoStats, setMecanicoStats] = useState<OrderStats[]>([]);
   const [vendedorStats, setVendedorStats] = useState<SalesStats[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
+
+  // Sub-tabs
+  const [activeAdminTab, setActiveAdminTab] = useState<'personal' | 'servicios'>('personal');
 
   const fetchEmpleados = async () => {
     try {
@@ -215,8 +219,34 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 items-start font-sans">
-      {/* Panel Izquierdo: CRUD Personal */}
+    <div className="flex flex-col gap-5 flex-1 w-full">
+      {/* Sub-tabs Admin */}
+      <div className="flex border-b border-hairline bg-white rounded p-1 shadow-sm select-none w-fit">
+        <button
+          onClick={() => setActiveAdminTab('personal')}
+          className={`py-2 px-6 text-[11px] font-bold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
+            activeAdminTab === 'personal'
+              ? 'border-cova-blue text-cova-blue'
+              : 'border-transparent text-neutral-400 hover:text-charcoal'
+          }`}
+        >
+          Personal y Analíticas
+        </button>
+        <button
+          onClick={() => setActiveAdminTab('servicios')}
+          className={`py-2 px-6 text-[11px] font-bold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
+            activeAdminTab === 'servicios'
+              ? 'border-cova-blue text-cova-blue'
+              : 'border-transparent text-neutral-400 hover:text-charcoal'
+          }`}
+        >
+          Catálogo de Servicios
+        </button>
+      </div>
+
+      {activeAdminTab === 'personal' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 items-start font-sans">
+          {/* Panel Izquierdo: CRUD Personal */}
       <div className="lg:col-span-7 panel-card p-5 bg-white flex flex-col shadow-sm">
         <div className="pb-3 mb-4 border-b-hairline flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -477,6 +507,10 @@ export default function AdminDashboard() {
             </form>
           </div>
         </div>
+      )}
+        </div>
+      ) : (
+        <ServicesCRUD />
       )}
     </div>
   );
