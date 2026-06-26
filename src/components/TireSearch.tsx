@@ -331,8 +331,10 @@ export default function TireSearch({ onAddTire, adminMode = false }: TireSearchP
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto w-full">
-            <table className="w-full border-collapse text-left min-w-[700px]">
+          <div className="flex flex-col gap-3">
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto w-full border border-hairline rounded-md">
+              <table className="w-full border-collapse text-left min-w-[700px]">
             <thead>
               <tr className="bg-neutral-50/75 border-b-hairline sticky top-0 backdrop-blur-[2px] z-10">
                 <th className="py-2.5 px-3 text-[10px] font-semibold text-charcoal/60 uppercase tracking-wider">Especificación</th>
@@ -424,8 +426,78 @@ export default function TireSearch({ onAddTire, adminMode = false }: TireSearchP
                   </tr>
                 );
               })}
-            </tbody>
-            </table>
+              </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden grid grid-cols-1 gap-3">
+              {filteredTires.map((tire) => {
+                const isLowStock = tire.stock_actual <= tire.stock_minimo;
+                const marginAmount = tire.precio_venta - tire.costo_adquisicion;
+                const marginPercent = tire.precio_venta > 0 ? (marginAmount / tire.precio_venta) * 100 : 0;
+                
+                return (
+                  <div key={tire.id} className="border border-hairline rounded bg-white p-4 shadow-sm flex flex-col gap-3">
+                    <div className="flex justify-between items-start border-b border-hairline pb-2">
+                      <div>
+                        <div className="font-bold text-charcoal text-[13px]">
+                          {tire.marca}
+                        </div>
+                        <div className="text-[11px] text-charcoal-light mt-0.5">
+                          {tire.modelo_llanta}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="font-mono text-[13px] font-bold text-charcoal">
+                          ${tire.precio_venta.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                        {isLowStock && (
+                          <span className="text-[9px] text-charcoal font-bold flex items-center gap-1 bg-[#F1F3F5] border border-hairline px-1.5 py-0.5 rounded leading-none">
+                            <span className="w-1.5 h-1.5 rounded-full bg-cova-blue flex-shrink-0 animate-pulse"></span>
+                            <span>Mín: {tire.stock_minimo}</span>
+                          </span>
+                        )}
+                        <span className="font-mono text-[11px] font-bold text-charcoal mt-0.5">
+                          {tire.stock_actual} pza{tire.stock_actual !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center pt-1">
+                      <div>
+                        <div className="font-semibold text-charcoal text-[11px]">
+                          {tire.ancho}/{tire.perfil} R{tire.rin}
+                        </div>
+                        <div className="text-[10px] font-mono text-charcoal-light/75">
+                          {tire.indice_carga_velocidad} • {tire.tipo_terreno}
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={() => onAddTire && onAddTire(tire)}
+                        disabled={tire.stock_actual === 0}
+                        className={`inline-flex items-center justify-center p-2 rounded border transition-all ${
+                          tire.stock_actual === 0
+                            ? 'bg-neutral-100 border-neutral-200 text-neutral-300 cursor-not-allowed'
+                            : 'bg-cova-blue border-cova-blue text-white hover:bg-opacity-90 shadow-sm'
+                        }`}
+                        title={tire.stock_actual === 0 ? "Agotado" : "Agregar a Cotización"}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {adminMode && tire.costo_adquisicion > 0 && (
+                      <div className="mt-2 text-[10px] font-mono p-2 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded leading-normal flex justify-between">
+                        <span>Adquisición: ${tire.costo_adquisicion.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                        <span className="font-bold">Margen: ${marginAmount.toLocaleString('es-MX', { minimumFractionDigits: 2 })} ({marginPercent.toFixed(0)}%)</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

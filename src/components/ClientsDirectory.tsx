@@ -17,6 +17,7 @@ import {
   ChevronRight,
   AlertCircle
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Vehiculo {
   id: string;
@@ -179,10 +180,11 @@ export default function ClientsDirectory() {
         setSelectedCliente(updatedCliente);
       }
       
+      toast.success('Cambios guardados con éxito');
       setIsEditModalOpen(false);
     } catch (err) {
       console.error('Error saving client:', err);
-      alert('Error al guardar los datos del cliente');
+      toast.error('Error al guardar los datos del cliente');
     } finally {
       setSavingEdit(false);
     }
@@ -372,45 +374,82 @@ export default function ClientsDirectory() {
                 {clientOrders.length === 0 ? (
                   <p className="text-xs text-neutral-400 italic">No hay servicios registrados en el taller.</p>
                 ) : (
-                  <div className="border border-hairline rounded overflow-x-auto">
-                    <table className="w-full text-left border-collapse min-w-[500px]">
-                      <thead>
-                        <tr className="bg-neutral-50 border-b border-hairline">
-                          <th className="py-2 px-3 text-[10px] font-bold text-neutral-500 uppercase">Fecha</th>
-                          <th className="py-2 px-3 text-[10px] font-bold text-neutral-500 uppercase">Vehículo</th>
-                          <th className="py-2 px-3 text-[10px] font-bold text-neutral-500 uppercase">Estado</th>
-                          <th className="py-2 px-3 text-[10px] font-bold text-neutral-500 uppercase">Notas</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-hairline">
-                        {clientOrders.map(order => {
-                          const date = new Date(order.fecha_ingreso).toLocaleDateString('es-MX', {
-                            day: '2-digit', month: 'short', year: 'numeric'
-                          });
-                          
-                          let statusColor = 'bg-neutral-100 text-neutral-600';
-                          if (order.estado === 'Listo para Entrega') statusColor = 'bg-emerald-50 text-emerald-700';
-                          if (order.estado === 'En Proceso') statusColor = 'bg-blue-50 text-cova-blue';
-                          
-                          return (
-                            <tr key={order.id} className="hover:bg-neutral-50/50">
-                              <td className="py-2 px-3 text-[11px] text-charcoal font-mono whitespace-nowrap">{date}</td>
-                              <td className="py-2 px-3 text-[11px] font-semibold text-charcoal">
-                                {order.vehiculo.marca} {order.vehiculo.modelo} <span className="font-mono text-[9px] text-neutral-400 ml-1">{order.vehiculo.placas}</span>
-                              </td>
-                              <td className="py-2 px-3">
-                                <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${statusColor}`}>
-                                  {order.estado}
-                                </span>
-                              </td>
-                              <td className="py-2 px-3 text-[10px] text-neutral-500 max-w-[200px] truncate" title={order.notas_recepcion}>
-                                {order.notas_recepcion || '-'}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                  <div className="flex flex-col gap-3">
+                    {/* Desktop Table */}
+                    <div className="hidden md:block border border-hairline rounded overflow-x-auto">
+                      <table className="w-full text-left border-collapse min-w-[500px]">
+                        <thead>
+                          <tr className="bg-neutral-50 border-b border-hairline">
+                            <th className="py-2 px-3 text-[10px] font-bold text-neutral-500 uppercase">Fecha</th>
+                            <th className="py-2 px-3 text-[10px] font-bold text-neutral-500 uppercase">Vehículo</th>
+                            <th className="py-2 px-3 text-[10px] font-bold text-neutral-500 uppercase">Estado</th>
+                            <th className="py-2 px-3 text-[10px] font-bold text-neutral-500 uppercase">Notas</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-hairline">
+                          {clientOrders.map(order => {
+                            const date = new Date(order.fecha_ingreso).toLocaleDateString('es-MX', {
+                              day: '2-digit', month: 'short', year: 'numeric'
+                            });
+                            
+                            let statusColor = 'bg-neutral-100 text-neutral-600';
+                            if (order.estado === 'Listo para Entrega') statusColor = 'bg-emerald-50 text-emerald-700';
+                            if (order.estado === 'En Proceso') statusColor = 'bg-blue-50 text-cova-blue';
+                            
+                            return (
+                              <tr key={order.id} className="hover:bg-neutral-50/50">
+                                <td className="py-2 px-3 text-[11px] text-charcoal font-mono whitespace-nowrap">{date}</td>
+                                <td className="py-2 px-3 text-[11px] font-semibold text-charcoal">
+                                  {order.vehiculo.marca} {order.vehiculo.modelo} <span className="font-mono text-[9px] text-neutral-400 ml-1">{order.vehiculo.placas}</span>
+                                </td>
+                                <td className="py-2 px-3">
+                                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${statusColor}`}>
+                                    {order.estado}
+                                  </span>
+                                </td>
+                                <td className="py-2 px-3 text-[10px] text-neutral-500 max-w-[200px] truncate" title={order.notas_recepcion}>
+                                  {order.notas_recepcion || '-'}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile Cards */}
+                    <div className="md:hidden grid grid-cols-1 gap-3">
+                      {clientOrders.map(order => {
+                        const date = new Date(order.fecha_ingreso).toLocaleDateString('es-MX', {
+                          day: '2-digit', month: 'short', year: 'numeric'
+                        });
+                        let statusColor = 'bg-neutral-100 text-neutral-600';
+                        if (order.estado === 'Listo para Entrega') statusColor = 'bg-emerald-50 text-emerald-700';
+                        if (order.estado === 'En Proceso') statusColor = 'bg-blue-50 text-cova-blue';
+
+                        return (
+                          <div key={order.id} className="border border-hairline rounded bg-white p-3 flex flex-col gap-2 shadow-sm">
+                            <div className="flex justify-between items-center border-b border-hairline pb-2">
+                              <span className="text-[11px] text-charcoal font-mono">{date}</span>
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${statusColor}`}>
+                                {order.estado}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-semibold text-charcoal">
+                                {order.vehiculo.marca} {order.vehiculo.modelo}
+                              </p>
+                              <p className="text-[9px] font-mono text-neutral-400">{order.vehiculo.placas}</p>
+                            </div>
+                            {order.notas_recepcion && (
+                              <div className="mt-1 pt-2 border-t border-hairline border-dashed">
+                                <p className="text-[10px] text-neutral-500 italic">"{order.notas_recepcion}"</p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </section>

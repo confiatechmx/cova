@@ -3,6 +3,7 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Clock, ArrowRight, Check, AlertTriangle, Loader2, Image as ImageIcon, X } from 'lucide-react';
+import { toast } from 'sonner';
 
 export interface BoardOrder {
   id: string;
@@ -250,8 +251,10 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
       
       // Update local state directly
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, estado: nextStatus } : o));
+      toast.success('Estado actualizado');
     } catch (err) {
       console.error('Error moving order status:', err);
+      toast.error('Error al cambiar el estado de la orden');
       // Mock update
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, estado: nextStatus } : o));
     } finally {
@@ -270,9 +273,10 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
       
       // Update local state directly
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, mecanico_id: mecanicoId } : o));
+      toast.success('Mecánico asignado');
     } catch (err) {
       console.error('Error assigning mechanic:', err);
-      alert('Error al asignar el mecánico.');
+      toast.error('Error al asignar el mecánico.');
     }
   };
 
@@ -288,8 +292,10 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
       if (error) throw error;
 
       setOrders(prev => prev.filter(o => o.id !== orderId));
+      toast.success('Vehículo entregado y archivado');
     } catch (err) {
       console.error('Error checking out vehicle:', err);
+      toast.error('Error al registrar la salida del vehículo');
       // Mock update
       setOrders(prev => prev.filter(o => o.id !== orderId));
     } finally {
@@ -413,7 +419,7 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
                           <button
                             onClick={() => handleMoveOrder(order.id, order.estado)}
                             disabled={updatingId === order.id}
-                            className="text-[9px] font-bold bg-white hover:bg-neutral-50 text-charcoal border border-hairline hover:border-neutral-400 rounded px-2.5 py-1.5 transition-all flex items-center gap-1 hover:-translate-y-0.5 shadow-sm active:translate-y-0 cursor-pointer"
+                            className="text-[9px] font-bold bg-white hover:bg-neutral-50 text-charcoal border border-hairline hover:border-neutral-400 rounded px-4 py-2.5 md:px-2.5 md:py-1.5 transition-all flex items-center gap-1 hover:-translate-y-0.5 shadow-sm active:translate-y-0 cursor-pointer"
                           >
                             {updatingId === order.id ? (
                               <Loader2 className="w-2.5 h-2.5 animate-spin" />
@@ -428,7 +434,7 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
                           <button
                             onClick={() => handleMoveOrder(order.id, order.estado)}
                             disabled={updatingId === order.id}
-                            className="text-[9px] font-bold bg-cova-blue hover:shadow-md text-ceramic border border-cova-blue rounded px-2.5 py-1.5 transition-all flex items-center gap-1 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                            className="text-[9px] font-bold bg-cova-blue hover:shadow-md text-ceramic border border-cova-blue rounded px-4 py-2.5 md:px-2.5 md:py-1.5 transition-all flex items-center gap-1 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
                           >
                             {updatingId === order.id ? (
                               <Loader2 className="w-2.5 h-2.5 animate-spin text-white" />
@@ -443,7 +449,7 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
                           <button
                             onClick={() => handleArchiveOrder(order.id)}
                             disabled={updatingId === order.id}
-                            className="text-[9px] font-bold bg-[#E2E8F0] hover:bg-[#CBD5E1] text-[#111111] border border-neutral-300 hover:border-neutral-400 rounded px-2.5 py-1.5 transition-all flex items-center gap-1 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                            className="text-[9px] font-bold bg-[#E2E8F0] hover:bg-[#CBD5E1] text-[#111111] border border-neutral-300 hover:border-neutral-400 rounded px-4 py-2.5 md:px-2.5 md:py-1.5 transition-all flex items-center gap-1 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
                           >
                             {updatingId === order.id ? (
                               <Loader2 className="w-2.5 h-2.5 animate-spin" />

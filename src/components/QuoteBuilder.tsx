@@ -16,8 +16,8 @@ import {
   Square,
   Sparkles,
   Loader2,
-  AlertTriangle
 } from 'lucide-react';
+import { toast } from 'sonner';
 import ModalAltaExpress from './ModalAltaExpress';
 import ModalAltaVehiculo from './ModalAltaVehiculo';
 import { createPortal } from 'react-dom';
@@ -453,6 +453,7 @@ export default function QuoteBuilder({
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       const quoteShortId = quote.id.substr(0, 8).toUpperCase();
+      toast.success('Cotización enviada a WhatsApp');
       addLog(`Cotización #${quoteShortId} guardada en Supabase y enviada a WhatsApp`, 'success');
 
       setWhatsappSent(true);
@@ -461,6 +462,7 @@ export default function QuoteBuilder({
       console.error('Error saving quote or sending webhook:', err);
       // Fallback
       await new Promise(resolve => setTimeout(resolve, 1500));
+      toast.success('Cotización enviada a WhatsApp (Modo local)');
       addLog(`Cotización #COVA-${Math.floor(1000 + Math.random()*9000)} generada y enviada a WhatsApp (offline/mock)`, 'success');
       setWhatsappSent(true);
       setTimeout(() => setWhatsappSent(false), 3000);
@@ -477,6 +479,7 @@ export default function QuoteBuilder({
     await new Promise(resolve => setTimeout(resolve, 1800));
     
     const quoteNum = Math.floor(1000 + Math.random() * 9000);
+    toast.success('Borrador generado y descargado');
     addLog(`Cotización #COVA-${quoteNum} creada en borrador y PDF descargado`, 'success');
 
     setIsGeneratingPdf(false);
@@ -495,8 +498,8 @@ export default function QuoteBuilder({
   };
 
   const handleConfirmPayment = async () => {
-    if (!currentClient || !currentVehicle || selectedItems.length === 0) {
-      alert('Por favor selecciona un cliente y un vehículo con items en el carrito.');
+    if (!selectedClientId || !selectedVehicleId || selectedItems.length === 0) {
+      toast.error('Por favor selecciona un cliente y un vehículo con items en el carrito.');
       return;
     }
 
@@ -571,11 +574,11 @@ export default function QuoteBuilder({
         metodoPago: paymentMethod,
         montoRecibido: paymentMethod === 'Efectivo' ? (parseFloat(amountReceived) || 0) : grandTotal,
         cambio: calculatedChange,
-        cliente: currentClient.nombre,
-        telefono: currentClient.telefono,
-        placas: currentVehicle.placas,
-        marca: currentVehicle.marca,
-        modelo: currentVehicle.modelo,
+        cliente: currentClient?.nombre || '',
+        telefono: currentClient?.telefono || '',
+        placas: currentVehicle?.placas || '',
+        marca: currentVehicle?.marca || '',
+        modelo: currentVehicle?.modelo || '',
         items: [...selectedItems],
         serviciosGenericos: availableServices
           .filter(s => selectedServiceIds.has(s.id))
@@ -585,6 +588,7 @@ export default function QuoteBuilder({
           }))
       });
 
+      toast.success('¡Cobro registrado exitosamente!');
       addLog(`Venta registrada y pagada por $${grandTotal.toFixed(2)} (Folio: COVA-${folioShort})`, 'success');
 
       // Limpiar estados de servicios y el carrito
@@ -595,7 +599,7 @@ export default function QuoteBuilder({
       setCheckoutSuccess(true);
     } catch (err: any) {
       console.error('Error al registrar venta POS:', err);
-      alert(`Error al registrar el cobro: ${err.message || 'Error desconocido'}`);
+      toast.error(`Error al registrar el cobro: ${err.message || 'Error desconocido'}`);
     } finally {
       setIsProcessingPayment(false);
     }

@@ -12,6 +12,7 @@ import {
   User, 
   Loader2 
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Client {
   id: string;
@@ -102,7 +103,7 @@ export default function RecepcionTracker({ onOrderCreated }: { onOrderCreated?: 
   // Status
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [successMsg, setSuccessMsg] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   // File Upload State
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -210,7 +211,7 @@ export default function RecepcionTracker({ onOrderCreated }: { onOrderCreated?: 
 
     } catch (err) {
       console.error('Upload error:', err);
-      alert('Error subiendo foto. Intenta de nuevo.');
+      toast.error('Error subiendo foto. Intenta de nuevo.');
       setDamageChecklist(prev => prev.map((item, i) => 
         i === idx ? { ...item, isUploading: false } : item
       ));
@@ -260,7 +261,7 @@ export default function RecepcionTracker({ onOrderCreated }: { onOrderCreated?: 
       }
 
       // Success feedback
-      setSuccessMsg(true);
+      toast.success('¡Orden de ingreso registrada!');
       
       // Reset checklist and notes
       setNotas('');
@@ -274,11 +275,10 @@ export default function RecepcionTracker({ onOrderCreated }: { onOrderCreated?: 
       // Trigger board refresh
       if (onOrderCreated) onOrderCreated();
 
-      setTimeout(() => setSuccessMsg(false), 3000);
     } catch (err) {
       console.error('Error submitting service order:', err);
       // Fallback
-      setSuccessMsg(true);
+      toast.success('¡Orden de ingreso registrada! (Modo local)');
       setNotas('');
       setDamageChecklist(VEHICLE_ZONES.map(zone => ({
         zona: zone.label,
@@ -287,7 +287,6 @@ export default function RecepcionTracker({ onOrderCreated }: { onOrderCreated?: 
         fotoAttached: false
       })));
       if (onOrderCreated) onOrderCreated();
-      setTimeout(() => setSuccessMsg(false), 3000);
     } finally {
       setSubmitting(false);
     }
@@ -313,13 +312,7 @@ export default function RecepcionTracker({ onOrderCreated }: { onOrderCreated?: 
             Registro inicial de daños y estado del vehículo para taller (Patio)
           </p>
         </div>
-        
-        {successMsg && (
-          <div className="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-100 rounded px-2.5 py-1 font-semibold flex items-center gap-1.5 animate-fade-in">
-            <CheckCircle className="w-3.5 h-3.5" />
-            <span>¡Orden de ingreso registrada!</span>
-          </div>
-        )}
+        </div>
       </div>
 
       {loading ? (
@@ -472,7 +465,7 @@ export default function RecepcionTracker({ onOrderCreated }: { onOrderCreated?: 
                     <button
                       type="button"
                       onClick={() => handleToggleDamage(idx)}
-                      className="focus:outline-none"
+                      className="focus:outline-none p-1.5 -ml-1.5"
                     >
                       {item.damaged ? (
                         <CheckCircle className="w-4 h-4 text-cova-blue" />
