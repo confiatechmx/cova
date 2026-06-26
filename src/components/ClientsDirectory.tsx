@@ -372,8 +372,8 @@ export default function ClientsDirectory() {
                 {clientOrders.length === 0 ? (
                   <p className="text-xs text-neutral-400 italic">No hay servicios registrados en el taller.</p>
                 ) : (
-                  <div className="border border-hairline rounded overflow-hidden">
-                    <table className="w-full text-left border-collapse">
+                  <div className="border border-hairline rounded overflow-x-auto">
+                    <table className="w-full text-left border-collapse min-w-[500px]">
                       <thead>
                         <tr className="bg-neutral-50 border-b border-hairline">
                           <th className="py-2 px-3 text-[10px] font-bold text-neutral-500 uppercase">Fecha</th>

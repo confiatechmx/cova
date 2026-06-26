@@ -91,16 +91,16 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-ceramic text-charcoal flex flex-col antialiased">
       {/* Top Status Bar */}
-      <div className="bg-white border-b border-hairline py-2 px-4 flex items-center justify-between text-[10px] text-charcoal-light/70 font-mono tracking-tight select-none">
-        <div className="flex items-center gap-4">
+      <div className="bg-white border-b border-hairline py-2 px-4 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0 text-[10px] text-charcoal-light/70 font-mono tracking-tight select-none">
+        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
           <span className="flex items-center gap-1.5 font-semibold text-charcoal">
             <Compass className="w-3.5 h-3.5 text-charcoal" />
-            <span>Llantera Cova • Culiacán</span>
+            <span>Cova • Culiacán</span>
           </span>
           <span className="hidden sm:inline border-r border-hairline h-3"></span>
-          <span className="hidden sm:inline text-neutral-400">Usuario: <strong className="text-charcoal font-sans">{user.nombre}</strong></span>
+          <span className="inline sm:hidden lg:inline text-neutral-400 truncate max-w-[120px]">Usuario: <strong className="text-charcoal font-sans">{user.nombre}</strong></span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end overflow-x-auto hide-scrollbar">
           {/* Demo Role Selector */}
           <div className="flex items-center gap-1 bg-neutral-100 border border-hairline rounded px-2 py-0.5 shadow-sm">
             <span className="text-[9px] font-sans font-semibold text-neutral-400">Rol Demo:</span>
@@ -115,11 +115,11 @@ export default function Home() {
             </select>
           </div>
 
-          <span className="flex items-center gap-1">
+          <span className="hidden sm:flex items-center gap-1 whitespace-nowrap">
             <Calendar className="w-3.5 h-3.5 text-neutral-400" />
             <span className="capitalize">{currentDateFormatted}</span>
           </span>
-          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold border border-emerald-100 uppercase text-[9px]">
+          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold border border-emerald-100 uppercase text-[9px] flex-shrink-0">
             Online
           </span>
         </div>
@@ -181,10 +181,10 @@ export default function Home() {
 
         {/* Navigation Tabs (Hidden for Mechanic) */}
         {!isMechanic && (
-          <div className="flex border-b border-hairline mb-2 bg-white rounded p-1 shadow-sm select-none">
+          <div className="flex overflow-x-auto hide-scrollbar snap-x border-b border-hairline mb-2 bg-white rounded p-1 shadow-sm select-none">
             <button
               onClick={() => setCurrentTab('sales')}
-              className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
+              className={`whitespace-nowrap flex-shrink-0 snap-start py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
                 activeTab === 'sales'
                   ? 'border-cova-blue text-cova-blue font-bold'
                   : 'border-transparent text-neutral-400 hover:text-charcoal'
@@ -194,7 +194,7 @@ export default function Home() {
             </button>
             <button
               onClick={() => setCurrentTab('history')}
-              className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
+              className={`whitespace-nowrap flex-shrink-0 snap-start py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
                 activeTab === 'history'
                   ? 'border-cova-blue text-cova-blue font-bold'
                   : 'border-transparent text-neutral-400 hover:text-charcoal'
@@ -204,7 +204,7 @@ export default function Home() {
             </button>
             <button
               onClick={() => setCurrentTab('workshop')}
-              className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
+              className={`whitespace-nowrap flex-shrink-0 snap-start py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
                 activeTab === 'workshop'
                   ? 'border-cova-blue text-cova-blue font-bold'
                   : 'border-transparent text-neutral-400 hover:text-charcoal'
@@ -214,7 +214,7 @@ export default function Home() {
             </button>
             <button
               onClick={() => setCurrentTab('crm')}
-              className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
+              className={`whitespace-nowrap flex-shrink-0 snap-start py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
                 activeTab === 'crm'
                   ? 'border-cova-blue text-cova-blue font-bold'
                   : 'border-transparent text-neutral-400 hover:text-charcoal'
@@ -226,7 +226,7 @@ export default function Home() {
               <>
                 <button
                   onClick={() => setCurrentTab('inventory')}
-                  className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
+                  className={`whitespace-nowrap flex-shrink-0 snap-start py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
                     activeTab === 'inventory'
                       ? 'border-cova-blue text-cova-blue font-bold'
                       : 'border-transparent text-neutral-400 hover:text-charcoal'
@@ -236,7 +236,7 @@ export default function Home() {
                 </button>
                 <button
                   onClick={() => setCurrentTab('admin')}
-                  className={`flex-1 md:flex-none py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
+                  className={`whitespace-nowrap flex-shrink-0 snap-start py-2.5 px-6 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 leading-none cursor-pointer ${
                     activeTab === 'admin'
                       ? 'border-cova-blue text-cova-blue font-bold'
                       : 'border-transparent text-neutral-400 hover:text-charcoal'

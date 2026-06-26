@@ -331,7 +331,8 @@ export default function TireSearch({ onAddTire, adminMode = false }: TireSearchP
             </p>
           </div>
         ) : (
-          <table className="w-full border-collapse text-left">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full border-collapse text-left min-w-[700px]">
             <thead>
               <tr className="bg-neutral-50/75 border-b-hairline sticky top-0 backdrop-blur-[2px] z-10">
                 <th className="py-2.5 px-3 text-[10px] font-semibold text-charcoal/60 uppercase tracking-wider">Especificación</th>
@@ -424,7 +425,8 @@ export default function TireSearch({ onAddTire, adminMode = false }: TireSearchP
                 );
               })}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
       </div>
     </div>

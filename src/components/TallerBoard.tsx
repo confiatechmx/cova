@@ -325,9 +325,9 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
           Cargando tablero operativo...
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="flex md:grid overflow-x-auto hide-scrollbar snap-x md:grid-cols-3 gap-5 pb-2">
           {columns.map((col) => (
-            <div key={col.key} className="flex flex-col gap-3.5 bg-neutral-50/50 border border-hairline rounded-lg p-3.5 min-h-[500px]">
+            <div key={col.key} className="flex-none w-[85vw] md:w-auto snap-center flex flex-col gap-3.5 bg-neutral-50/50 border border-hairline rounded-lg p-3.5 min-h-[500px]">
               {/* Column Header */}
               <div className="flex items-center justify-between pb-2 border-b-hairline">
                 <span className="text-xs font-bold text-charcoal uppercase tracking-wider">
