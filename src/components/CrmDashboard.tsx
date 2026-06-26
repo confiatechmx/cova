@@ -12,8 +12,11 @@ import {
   Check, 
   AlertCircle, 
   FileCode,
-  Loader2
+  Loader2,
+  Users,
+  MessageSquare
 } from 'lucide-react';
+import ClientsDirectory from './ClientsDirectory';
 
 interface NotificationTemplate {
   id: string;
@@ -31,6 +34,9 @@ interface QueueItem {
 }
 
 export default function CrmDashboard() {
+  // Tabs State
+  const [activeTab, setActiveTab] = useState<'directorio' | 'whatsapp'>('directorio');
+
   // Connection state
   const [connectionStatus, setConnectionStatus] = useState<'Connected' | 'Disconnected' | 'Connecting'>('Disconnected');
   const [qrCode, setQrCode] = useState<string | null>(null);
@@ -316,8 +322,38 @@ export default function CrmDashboard() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 items-start">
-      {/* Panel 1: Estado de Conexión (Takes 4 cols) */}
+    <div className="flex flex-col h-full gap-4">
+      {/* Pestañas CRM superiores */}
+      <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-lg self-start">
+        <button
+          onClick={() => setActiveTab('directorio')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-xs font-bold transition-all ${
+            activeTab === 'directorio'
+              ? 'bg-white text-cova-blue shadow-sm'
+              : 'text-neutral-500 hover:text-charcoal'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          Directorio de Clientes
+        </button>
+        <button
+          onClick={() => setActiveTab('whatsapp')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-xs font-bold transition-all ${
+            activeTab === 'whatsapp'
+              ? 'bg-white text-cova-blue shadow-sm'
+              : 'text-neutral-500 hover:text-charcoal'
+          }`}
+        >
+          <MessageSquare className="w-4 h-4" />
+          Automatización WhatsApp
+        </button>
+      </div>
+
+      {activeTab === 'directorio' ? (
+        <ClientsDirectory />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 items-start">
+          {/* Panel 1: Estado de Conexión (Takes 4 cols) */}
       <div className="lg:col-span-4 panel-card p-5 bg-white flex flex-col h-full">
         <div className="pb-3 mb-4 border-b-hairline flex items-center justify-between">
           <span className="text-xs font-bold text-charcoal uppercase tracking-wider">
@@ -628,6 +664,7 @@ export default function CrmDashboard() {
                 </div>
               </div>
             ))}
+          </div>
           </div>
         )}
       </div>

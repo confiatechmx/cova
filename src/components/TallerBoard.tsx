@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Clock, ArrowRight, Check, AlertTriangle, Loader2 } from 'lucide-react';
+import { Clock, ArrowRight, Check, AlertTriangle, Loader2, Image as ImageIcon, X } from 'lucide-react';
 
 export interface BoardOrder {
   id: string;
@@ -19,6 +19,11 @@ export interface BoardOrder {
     placas: string;
   };
   mecanico_id?: string;
+  checklist_danos?: {
+    zona_vehiculo: string;
+    tipo_dano: string;
+    url_foto: string | null;
+  }[];
 }
 
 export interface TallerBoardRef {
@@ -74,6 +79,9 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
+  // Modal State
+  const [viewingDamagesOrder, setViewingDamagesOrder] = useState<BoardOrder | null>(null);
+
   const fetchOrders = async () => {
     try {
       setLoading(true);
@@ -93,6 +101,11 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
             modelo,
             anio,
             placas
+          ),
+          checklist_danos (
+            zona_vehiculo,
+            tipo_dano,
+            url_foto
           )
         `)
         .order('fecha_ingreso', { ascending: true });
@@ -368,6 +381,17 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
                         </div>
                       )}
 
+                      {/* Damages Badge */}
+                      {order.checklist_danos && order.checklist_danos.length > 0 && (
+                        <button 
+                          onClick={() => setViewingDamagesOrder(order)}
+                          className="flex items-center gap-1.5 self-start bg-rose-50 border border-rose-200 text-rose-700 px-2 py-1 rounded text-[9px] font-bold mt-1 hover:bg-rose-100 transition-colors"
+                        >
+                          <AlertTriangle className="w-3 h-3" />
+                          Daños Registrados ({order.checklist_danos.length})
+                        </button>
+                      )}
+
                       {/* Mechanic Assignment */}
                       <div className="mt-1.5 flex items-center justify-between text-[10px]">
                         <span className="text-neutral-400 font-sans">Mecánico Asignado:</span>
@@ -436,6 +460,63 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Modal Galería de Daños */}
+      {viewingDamagesOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-4 border-b border-hairline bg-neutral-50">
+              <h3 className="text-sm font-bold text-charcoal flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-500" />
+                Daños en Recepción
+              </h3>
+              <button 
+                onClick={() => setViewingDamagesOrder(null)}
+                className="text-neutral-400 hover:text-charcoal transition-colors p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className="p-5">
+              <div className="mb-4">
+                <p className="text-xs font-semibold text-charcoal">
+                  Vehículo: {viewingDamagesOrder.vehiculos?.marca} {viewingDamagesOrder.vehiculos?.modelo} ({viewingDamagesOrder.vehiculos?.placas})
+                </p>
+                <p className="text-[10px] text-neutral-500 mt-0.5">
+                  Revisado el {new Date(viewingDamagesOrder.fecha_ingreso).toLocaleString('es-MX')}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto dense-scrollbar">
+                {viewingDamagesOrder.checklist_danos?.map((dano, i) => (
+                  <div key={i} className="border border-hairline rounded-lg overflow-hidden bg-neutral-50/50 flex flex-col">
+                    <div className="p-2 border-b border-hairline">
+                      <p className="text-[11px] font-bold text-charcoal">{dano.zona_vehiculo}</p>
+                      <p className="text-[9px] font-mono text-rose-600 bg-rose-50 inline-block px-1.5 rounded mt-0.5 uppercase tracking-wide border border-rose-100">{dano.tipo_dano}</p>
+                    </div>
+                    <div className="flex-1 min-h-[120px] relative bg-neutral-100 flex items-center justify-center">
+                      {dano.url_foto ? (
+                        <img 
+                          src={dano.url_foto} 
+                          alt={`Daño en ${dano.zona_vehiculo}`} 
+                          className="w-full h-full object-cover absolute inset-0 cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => window.open(dano.url_foto!, '_blank')}
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-neutral-400 gap-1.5 p-4 text-center">
+                          <ImageIcon className="w-6 h-6 opacity-50" />
+                          <span className="text-[9px]">Sin evidencia fotográfica</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -34,6 +34,8 @@ interface DamageItem {
   damaged: boolean;
   tipo: string;
   fotoAttached: boolean;
+  url_foto?: string;
+  isUploading?: boolean;
 }
 
 const VEHICLE_ZONES = [
@@ -102,6 +104,10 @@ export default function RecepcionTracker({ onOrderCreated }: { onOrderCreated?: 
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState(false);
 
+  // File Upload State
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [currentCaptureIdx, setCurrentCaptureIdx] = useState<number | null>(null);
+
   // Fetch clients and vehicles
   useEffect(() => {
     const fetchIntakeData = async () => {
@@ -164,13 +170,54 @@ export default function RecepcionTracker({ onOrderCreated }: { onOrderCreated?: 
     ));
   };
 
-  // Simulate evidence capture (Supabase Storage placeholder)
+  // Trigger actual file selector
   const handleCaptureEvidence = (idx: number) => {
+    setCurrentCaptureIdx(idx);
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // Handle actual file upload to Supabase Storage
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || currentCaptureIdx === null) return;
+    
+    const idx = currentCaptureIdx;
+    
+    // Set uploading state
     setDamageChecklist(prev => prev.map((item, i) => 
-      i === idx ? { ...item, fotoAttached: true } : item
+      i === idx ? { ...item, isUploading: true } : item
     ));
-    // TODO: Trigger Supabase Storage upload for photo file
-    console.log(`Abriendo cámara / cargando archivo para evidencia en zona: ${damageChecklist[idx].zona}`);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `evidencia_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      
+      const { error } = await supabase.storage
+        .from('evidencias-taller')
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage
+        .from('evidencias-taller')
+        .getPublicUrl(fileName);
+
+      setDamageChecklist(prev => prev.map((item, i) => 
+        i === idx ? { ...item, fotoAttached: true, url_foto: urlData.publicUrl, isUploading: false } : item
+      ));
+
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert('Error subiendo foto. Intenta de nuevo.');
+      setDamageChecklist(prev => prev.map((item, i) => 
+        i === idx ? { ...item, isUploading: false } : item
+      ));
+    } finally {
+      setCurrentCaptureIdx(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   // Submit intake form
@@ -202,7 +249,7 @@ export default function RecepcionTracker({ onOrderCreated }: { onOrderCreated?: 
           orden_servicio_id: order.id,
           zona_vehiculo: d.zona,
           tipo_dano: d.tipo,
-          url_foto: d.fotoAttached ? `evidencia_${order.id}_${d.zona.replace(/\s+/g, '_').toLowerCase()}.jpg` : null
+          url_foto: d.fotoAttached ? d.url_foto : null
         }));
 
         const { error: damageErr } = await supabase
@@ -247,7 +294,15 @@ export default function RecepcionTracker({ onOrderCreated }: { onOrderCreated?: 
   };
 
   return (
-    <div className="panel-card p-5 flex flex-col h-full bg-white">
+    <div className="panel-card p-5 flex flex-col h-full bg-white relative">
+      <input 
+        type="file" 
+        accept="image/*" 
+        capture="environment" 
+        ref={fileInputRef} 
+        onChange={handleFileChange} 
+        className="hidden" 
+      />
       {/* Title block */}
       <div className="pb-4 mb-4 border-b-hairline flex items-center justify-between">
         <div>
@@ -448,15 +503,31 @@ export default function RecepcionTracker({ onOrderCreated }: { onOrderCreated?: 
                       <button
                         type="button"
                         onClick={() => handleCaptureEvidence(idx)}
+                        disabled={item.isUploading}
                         className={`flex items-center gap-1 py-1 px-2 text-[9px] font-semibold rounded border transition-colors ${
-                          item.fotoAttached
+                          item.isUploading
+                            ? 'bg-neutral-100 border-neutral-200 text-neutral-400 cursor-not-allowed'
+                            : item.fotoAttached
                             ? 'bg-emerald-50 border-emerald-200 text-emerald-700 font-bold'
                             : 'bg-white border-hairline hover:bg-neutral-50 text-charcoal-light hover:border-neutral-300'
                         }`}
                       >
-                        <Camera className="w-2.5 h-2.5" />
-                        <span>{item.fotoAttached ? 'Adjuntado' : 'Capturar Evidencia'}</span>
+                        {item.isUploading ? (
+                          <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                        ) : (
+                          <Camera className="w-2.5 h-2.5" />
+                        )}
+                        <span>
+                          {item.isUploading ? 'Subiendo...' : item.fotoAttached ? 'Adjuntado' : 'Capturar Evidencia'}
+                        </span>
                       </button>
+                      
+                      {/* Thumbnail Preview */}
+                      {item.fotoAttached && item.url_foto && (
+                        <div className="w-6 h-6 rounded border border-hairline overflow-hidden ml-1">
+                          <img src={item.url_foto} alt="Evidencia" className="w-full h-full object-cover" />
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

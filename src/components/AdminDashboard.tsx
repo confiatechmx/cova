@@ -17,6 +17,9 @@ import {
   UserCheck,
   UserX
 } from 'lucide-react';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer 
+} from 'recharts';
 
 interface Empleado {
   id: string;
@@ -353,30 +356,25 @@ export default function AdminDashboard() {
               No hay mecánicos registrados
             </div>
           ) : (
-            <div className="flex flex-col gap-2.5">
-              {mecanicoStats.map((mech) => (
-                <div 
-                  key={mech.mecanico_id}
-                  className="p-3 border border-hairline rounded bg-neutral-50/50 flex flex-col gap-1.5 hover:border-neutral-300 transition-all"
+            <div className="h-64 mt-2 -ml-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={mecanicoStats}
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-charcoal text-xs">{mech.nombre_mecanico}</span>
-                    <span className="font-mono text-[10px] bg-neutral-200 text-charcoal px-1.5 py-0.5 rounded font-bold">
-                      {mech.total_servicios} asignados
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 mt-0.5 text-[10px] font-mono">
-                    <div className="flex items-center justify-between p-1.5 bg-white border border-hairline rounded">
-                      <span className="text-neutral-400">En Proceso:</span>
-                      <span className="font-bold text-cova-blue">{mech.en_proceso}</span>
-                    </div>
-                    <div className="flex items-center justify-between p-1.5 bg-white border border-hairline rounded">
-                      <span className="text-neutral-400">Listos:</span>
-                      <span className="font-bold text-emerald-600">{mech.listos}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="nombre_mecanico" type="category" width={80} tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                  <RechartsTooltip 
+                    cursor={{fill: '#f8fafc'}}
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '11px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontWeight: 600 }}
+                  />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 600 }} />
+                  <Bar dataKey="en_proceso" name="En Proceso" stackId="a" fill="#3b82f6" radius={[0, 0, 0, 0]} barSize={24} />
+                  <Bar dataKey="listos" name="Listos" stackId="a" fill="#10b981" radius={[0, 4, 4, 0]} barSize={24} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           )}
         </div>
@@ -404,30 +402,23 @@ export default function AdminDashboard() {
               No hay vendedores registrados
             </div>
           ) : (
-            <div className="flex flex-col gap-2.5">
-              {vendedorStats.map((vend) => (
-                <div 
-                  key={vend.vendedor_id}
-                  className="p-3 border border-hairline rounded bg-neutral-50/50 flex flex-col gap-1.5 hover:border-neutral-300 transition-all"
+            <div className="h-64 mt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={vendedorStats}
+                  margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-charcoal text-xs">{vend.nombre_vendedor}</span>
-                    <span className="font-mono text-[10px] font-bold text-emerald-700">
-                      ${vend.monto_total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} cerrados
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 mt-0.5 text-[10px] font-mono">
-                    <div className="flex items-center justify-between p-1.5 bg-white border border-hairline rounded">
-                      <span className="text-neutral-400">Cotizaciones:</span>
-                      <span className="font-bold text-neutral-700">{vend.total_cotizado}</span>
-                    </div>
-                    <div className="flex items-center justify-between p-1.5 bg-white border border-hairline rounded">
-                      <span className="text-neutral-400">Cerradas:</span>
-                      <span className="font-bold text-emerald-600">{vend.ventas_cerradas}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                  <XAxis dataKey="nombre_vendedor" tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                  <YAxis tickFormatter={(val) => `$${val.toLocaleString()}`} tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                  <RechartsTooltip 
+                    cursor={{fill: '#f8fafc'}}
+                    formatter={(value: number) => [`$${value.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`, 'Monto Vendido']}
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '11px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontWeight: 600 }}
+                  />
+                  <Bar dataKey="monto_total" name="Monto Vendido" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           )}
         </div>
