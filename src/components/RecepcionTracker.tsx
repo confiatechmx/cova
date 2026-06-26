@@ -103,7 +103,6 @@ export default function RecepcionTracker({ onOrderCreated }: { onOrderCreated?: 
   // Status
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
   // File Upload State
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -312,9 +311,7 @@ export default function RecepcionTracker({ onOrderCreated }: { onOrderCreated?: 
             Registro inicial de daños y estado del vehículo para taller (Patio)
           </p>
         </div>
-        </div>
       </div>
-
       {loading ? (
         <div className="flex-1 flex items-center justify-center py-12">
           <span className="text-xs text-charcoal-light animate-pulse font-medium">Cargando datos de recepción...</span>

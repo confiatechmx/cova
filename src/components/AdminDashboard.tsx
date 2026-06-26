@@ -413,7 +413,7 @@ export default function AdminDashboard() {
                   <YAxis tickFormatter={(val) => `$${val.toLocaleString()}`} tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }} axisLine={false} tickLine={false} />
                   <RechartsTooltip 
                     cursor={{fill: '#f8fafc'}}
-                    formatter={(value: number) => [`$${value.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`, 'Monto Vendido']}
+                    formatter={(value: any) => [`$${Number(value).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`, 'Monto Vendido']}
                     contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '11px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontWeight: 600 }}
                   />
                   <Bar dataKey="monto_total" name="Monto Vendido" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />

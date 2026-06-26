@@ -16,6 +16,7 @@ import {
   Square,
   Sparkles,
   Loader2,
+  AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import ModalAltaExpress from './ModalAltaExpress';
@@ -188,11 +189,10 @@ export default function QuoteBuilder({
     marca: string;
     modelo: string;
     items: QuoteItem[];
-    servicios: {
-      alineacion: boolean;
-      nitrogeno: boolean;
-      balatas: boolean;
-    };
+    serviciosGenericos?: {
+      nombre: string;
+      precio: number;
+    }[];
   } | null>(null);
   const [mounted, setMounted] = useState(false);
 
