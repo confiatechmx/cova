@@ -1,5 +1,12 @@
 import type { Metadata, Viewport } from "next";
+import { Geist } from "next/font/google";
 import "./globals.css";
+
+const geist = Geist({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-geist-sans",
+});
 
 export const viewport: Viewport = {
   themeColor: "#0ea5e9",
@@ -27,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="h-full antialiased">
+    <html lang="es" className={`h-full antialiased ${geist.variable}`}>
       <body className="min-h-full flex flex-col">
         {children}
         <Toaster position="top-right" richColors />

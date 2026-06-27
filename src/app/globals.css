@@ -1,18 +1,19 @@
 @import "tailwindcss";
 
 @theme {
+  --color-accent: #2563EB;
   --color-ceramic: #F8F9FA;
   --color-charcoal: #111111;
   --color-charcoal-light: #555555;
   --color-hairline: #E2E8F0;
   --color-cova-blue: #002D62; /* Azul Oscuro de logo.jpg */
   
-  --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 :root {
-  --background: #F8F9FA;
+  --background: #FAFAFA; /* bg-zinc-50 */
   --foreground: #111111;
 }
 
@@ -43,15 +44,15 @@ body {
 /* Linear-inspired physical interactive cards */
 .panel-card {
   background-color: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 6px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  border: 1px solid #F4F4F5; /* border-zinc-100 */
+  border-radius: 0.75rem; /* rounded-xl */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .panel-card:hover {
-  border-color: #CBD5E1;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.01);
+  border-color: #E4E4E7; /* border-zinc-200 */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
 }
 
