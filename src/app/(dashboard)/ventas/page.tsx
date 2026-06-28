@@ -170,14 +170,14 @@ export default function VentasPipelinePage() {
   return (
     <div className="h-full flex flex-col relative animate-in fade-in duration-300">
       
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3 sm:gap-0">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">Pipeline de Ventas</h1>
           <p className="text-sm font-light text-zinc-500 mt-1">Convierte tus prospectos de redes sociales en órdenes de servicio.</p>
         </div>
         <button 
           onClick={() => setIsManualModalOpen(true)}
-          className="bg-zinc-900 text-white hover:bg-zinc-800 px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2 shadow-sm"
+          className="bg-zinc-900 text-white hover:bg-zinc-800 px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-2 shadow-sm w-full sm:w-auto"
         >
           <Plus size={14} />
           Nuevo Prospecto Manual

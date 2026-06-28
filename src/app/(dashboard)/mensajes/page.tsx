@@ -179,14 +179,14 @@ export default function MensajesInboxPage() {
 
   return (
     <div className="h-full flex flex-col relative animate-in fade-in duration-300">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3 sm:gap-0">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">Inbox Omnicanal</h1>
           <p className="text-sm font-light text-zinc-500 mt-1">Centraliza tus mensajes de WhatsApp y Redes Sociales.</p>
         </div>
         <button 
           onClick={simulateIncomingLead}
-          className="bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2 shadow-sm"
+          className="bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-2 shadow-sm w-full sm:w-auto"
         >
           <Globe size={14} />
           Simular Lead de Facebook
@@ -196,7 +196,7 @@ export default function MensajesInboxPage() {
       <div className="flex-1 bg-white border border-zinc-200 rounded-2xl shadow-sm flex overflow-hidden">
         
         {/* Left Panel: Chat List */}
-        <div className="w-80 border-r border-zinc-200 flex flex-col bg-zinc-50/50 shrink-0">
+        <div className={`w-full md:w-80 border-r border-zinc-200 flex-col bg-zinc-50/50 shrink-0 ${activeSession ? 'hidden md:flex' : 'flex'}`}>
           <div className="p-4 border-b border-zinc-200">
             <div className="relative">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
@@ -244,13 +244,16 @@ export default function MensajesInboxPage() {
         </div>
 
         {/* Right Panel: Chat Window */}
-        <div className="flex-1 flex flex-col bg-[#f0f2f5] relative">
+        <div className={`flex-1 flex-col bg-[#f0f2f5] relative ${!activeSession ? 'hidden md:flex' : 'flex'}`}>
           {activeSession ? (
             <>
               {/* Chat Header */}
-              <div className="h-16 bg-white border-b border-zinc-200 px-6 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-500">
+              <div className="h-16 bg-white border-b border-zinc-200 px-4 md:px-6 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <button onClick={() => setActiveSession(null)} className="md:hidden p-2 -ml-2 text-zinc-500 hover:text-zinc-700">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                  </button>
+                  <div className="w-10 h-10 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-500 shrink-0">
                     <User size={20} />
                   </div>
                   <div className="flex flex-col">

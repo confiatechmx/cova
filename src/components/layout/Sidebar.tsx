@@ -35,7 +35,7 @@ export function Sidebar() {
       <nav className="flex flex-row md:flex-col gap-1 md:gap-3 w-full items-center justify-around md:justify-start flex-1 md:overflow-visible overflow-y-auto no-scrollbar">
         
         {/* Mobile Mix (All icons together on mobile, separated on desktop) */}
-        <div className="flex md:hidden flex-row gap-2 w-full justify-around">
+        <div className="flex md:hidden flex-row gap-4 w-full overflow-x-auto no-scrollbar justify-start px-2 py-1 items-center snap-x">
           {[...productionItems, ...salesItems].map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -43,7 +43,7 @@ export function Sidebar() {
               <Link 
                 key={item.label}
                 href={item.href} 
-                className={`flex flex-col items-center justify-center p-2 rounded-xl transition-colors w-[48px] h-[48px] ${
+                className={`flex flex-col items-center justify-center p-2 rounded-xl transition-colors w-[48px] h-[48px] shrink-0 snap-start ${
                   isActive ? "bg-blue-50/50 text-blue-600 shadow-sm border border-blue-100/50" : "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-50"
                 }`}
               >

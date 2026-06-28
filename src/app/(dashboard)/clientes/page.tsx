@@ -153,7 +153,7 @@ export default function ClientesPage() {
             <thead className="sticky top-0 bg-zinc-50/90 backdrop-blur-sm z-10 border-b border-zinc-100">
               <tr>
                 <th className="px-5 py-3 text-[11px] tracking-wider text-zinc-400 font-semibold uppercase min-w-[200px]">Cliente</th>
-                <th className="px-5 py-3 text-[11px] tracking-wider text-zinc-400 font-semibold uppercase min-w-[220px]">Datos de Contacto</th>
+                <th className="hidden md:table-cell px-5 py-3 text-[11px] tracking-wider text-zinc-400 font-semibold uppercase min-w-[220px]">Datos de Contacto</th>
                 <th className="px-5 py-3 text-[11px] tracking-wider text-zinc-400 font-semibold uppercase min-w-[300px]">Vehículos Registrados</th>
               </tr>
             </thead>
@@ -175,7 +175,11 @@ export default function ClientesPage() {
                     <td className="px-5 py-4 align-top">
                       <div className="flex flex-col gap-1.5">
                         <span className="font-semibold text-zinc-900 text-sm tracking-tight">{client.nombre}</span>
-                        <div className="flex items-center gap-2">
+                        <div className="flex md:hidden items-center gap-1.5 text-[11px] font-medium text-zinc-600 mt-0.5">
+                          <Phone size={11} className="text-zinc-400" />
+                          {client.telefono}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-[11px] font-medium text-zinc-500">Reg: {client.fechaRegistro}</span>
                           {client.tags.length > 0 && (
                             <div className="flex items-center gap-1">
@@ -192,7 +196,7 @@ export default function ClientesPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-4 align-top">
+                    <td className="hidden md:table-cell px-5 py-4 align-top">
                       <div className="flex flex-col gap-1.5">
                         <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-600">
                           <Phone size={13} className="text-zinc-400" />
