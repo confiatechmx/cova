@@ -147,8 +147,10 @@ export default function ClientesPage() {
       </div>
 
       {/* Data Table Container */}
-      <div className="panel-card overflow-hidden flex-1 flex flex-col">
-        <div className="overflow-x-auto flex-1 dense-scrollbar">
+      <div className="panel-card overflow-hidden flex-1 flex flex-col bg-zinc-50/50 md:bg-white">
+        
+        {/* Desktop Table */}
+        <div className="hidden md:block overflow-x-auto flex-1 dense-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead className="sticky top-0 bg-zinc-50/90 backdrop-blur-sm z-10 border-b border-zinc-100">
               <tr>
@@ -266,6 +268,48 @@ export default function ClientesPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden flex-1 overflow-y-auto p-3 space-y-3">
+          {loading ? (
+             <div className="p-4 text-center text-zinc-500 text-sm">Cargando clientes...</div>
+          ) : filteredClients.length > 0 ? (
+             filteredClients.map((client: Client) => (
+                <div key={client.id} className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex flex-col gap-3">
+                   <div className="flex justify-between items-start">
+                     <div className="flex flex-col">
+                       <span className="font-bold text-zinc-900 text-base">{client.nombre}</span>
+                       <div className="flex items-center gap-1.5 text-xs text-zinc-500 font-medium mt-1">
+                          <Phone size={12} className="text-zinc-400" /> {client.telefono}
+                       </div>
+                     </div>
+                     <button onClick={() => router.push(`/clientes/${client.id}`)} className="text-blue-600 font-bold text-[11px] uppercase tracking-wider bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors">Ver Perfil</button>
+                   </div>
+                   
+                   {/* Vehiculos (Mobile) */}
+                   <div className="flex flex-wrap gap-2 pt-3 border-t border-zinc-100">
+                     {client.vehiculos.map((v: Vehicle) => (
+                       <span 
+                          key={v.id} 
+                          onClick={() => { setSelectedClientId(client.id); setSelectedVehicle(v); setIsVehicleModalOpen(true); }} 
+                          className="bg-zinc-100 border border-zinc-200 text-zinc-700 text-[11px] font-bold px-2.5 py-1 rounded-md cursor-pointer hover:bg-zinc-200 transition-colors"
+                       >
+                         {v.placas ? `${v.placas} - ${v.marca}` : v.marca}
+                       </span>
+                     ))}
+                     <button 
+                        onClick={() => { setSelectedClientId(client.id); setSelectedVehicle(null); setIsVehicleModalOpen(true); }} 
+                        className="flex items-center justify-center gap-1 bg-zinc-50 hover:bg-zinc-100 transition-colors border border-dashed border-zinc-300 text-zinc-500 px-2.5 py-1 rounded-md text-[11px] font-bold"
+                     >
+                        <Plus size={12} /> Auto
+                     </button>
+                   </div>
+                </div>
+             ))
+          ) : (
+             <div className="p-4 text-center text-zinc-500 text-sm">No se encontraron clientes.</div>
+          )}
         </div>
       </div>
 
