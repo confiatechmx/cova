@@ -17,8 +17,11 @@ import {
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { KanbanColumn } from "./KanbanColumn";
 import { KanbanCard, Order } from "./KanbanCard";
-import { ChevronDown, Filter } from "lucide-react";
+import { ChevronDown, Filter, Search, Plus } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { Modal } from "../ui/Modal";
+import { OrderForm } from "./OrderForm";
+import { OrderDetailsModal } from "./OrderDetailsModal";
 
 const defaultColumns = [
   { id: "Citas del Día", title: "Citas del Día" },
@@ -55,11 +58,13 @@ export function KanbanBoard() {
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [initialColumn, setInitialColumn] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchOrders() {
-      setLoading(true);
-      const { data, error } = await supabase
+  async function fetchOrders() {
+    setLoading(true);
+    const { data, error } = await supabase
         .from('ordenes_servicio')
         .select(`
           id,
@@ -93,7 +98,9 @@ export function KanbanBoard() {
         setOrders(formattedOrders);
       }
       setLoading(false);
-    }
+  }
+
+  useEffect(() => {
     fetchOrders();
   }, []);
 
@@ -182,6 +189,14 @@ export function KanbanBoard() {
     setInitialColumn(null);
   };
 
+  const filteredOrders = orders.filter(order => {
+    const query = searchQuery.toLowerCase();
+    const matchName = order.customerName.toLowerCase().includes(query);
+    const matchCar = order.carModel.toLowerCase().includes(query);
+    const matchPlates = order.plates.toLowerCase().includes(query);
+    return matchName || matchCar || matchPlates;
+  });
+
   return (
     <div className="h-full flex flex-col">
       {/* Header and Filters Row */}
@@ -191,13 +206,30 @@ export function KanbanBoard() {
             <h1 className="text-2xl font-semibold text-zinc-900 tracking-tight">Tablero de Operaciones</h1>
             <p className="text-sm font-light text-zinc-500 mt-1">Gestiona el flujo de trabajo y las órdenes del día.</p>
           </div>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 sm:py-2 rounded-xl text-sm font-medium transition-colors shadow-sm w-full sm:w-auto">
+          <button 
+            onClick={() => setIsOrderModalOpen(true)}
+            className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 sm:py-2 rounded-xl text-sm font-medium transition-colors shadow-sm w-full sm:w-auto"
+          >
+            <Plus size={16} strokeWidth={2.5} />
             Nueva Orden
           </button>
         </div>
 
         {/* Toolbar / Filters */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="flex flex-col sm:flex-row flex-wrap sm:items-center gap-2 sm:gap-3">
+          {/* Search */}
+          <div className="relative w-full sm:w-64 shrink-0">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search size={14} className="text-zinc-400" />
+            </div>
+            <input 
+              type="text" 
+              placeholder="Buscar placa, cliente o auto..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="block w-full pl-9 pr-3 py-1.5 border border-zinc-200/80 rounded-md bg-zinc-50/50 text-zinc-900 placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-blue-500 sm:text-sm transition-all"
+            />
+          </div>
           <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white text-xs font-medium text-zinc-600 hover:bg-zinc-50 shadow-sm transition-colors">
             <span className="text-zinc-400 font-normal">Estatus:</span> Todos
             <ChevronDown size={14} className="ml-1 opacity-50" />
@@ -241,7 +273,8 @@ export function KanbanBoard() {
                 <KanbanColumn
                   id={col.id}
                   title={col.title}
-                  orders={orders.filter((o) => o.columnId === col.id)}
+                  orders={filteredOrders.filter((o) => o.columnId === col.id)}
+                  onCardClick={(id) => setSelectedOrderId(id)}
                 />
               </div>
             ))}
@@ -252,6 +285,38 @@ export function KanbanBoard() {
           </DragOverlay>
         </DndContext>
       </div>
+
+      {/* Modal for New Order */}
+      <Modal
+        isOpen={isOrderModalOpen}
+        onClose={() => setIsOrderModalOpen(false)}
+        title="Crear Nueva Orden de Servicio"
+        description="Selecciona un cliente y su vehículo para ingresarlo al taller."
+      >
+        <OrderForm 
+          onSuccess={() => {
+            setIsOrderModalOpen(false);
+            fetchOrders();
+          }}
+          onCancel={() => setIsOrderModalOpen(false)}
+        />
+      </Modal>
+
+      {/* Modal for Order Details (Expediente) */}
+      <Modal
+        isOpen={!!selectedOrderId}
+        onClose={() => setSelectedOrderId(null)}
+        title="Expediente de Servicio"
+        description="Detalle completo de la orden, cliente y vehículo."
+      >
+        {selectedOrderId && (
+          <OrderDetailsModal 
+            orderId={selectedOrderId}
+            onClose={() => setSelectedOrderId(null)}
+            onUpdate={fetchOrders}
+          />
+        )}
+      </Modal>
     </div>
   );
 }

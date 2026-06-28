@@ -50,6 +50,8 @@ export default function InventarioPage() {
   const [inventory, setInventory] = useState<Tire[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
 
   async function fetchInventory() {
     setLoading(true);
@@ -80,6 +82,13 @@ export default function InventarioPage() {
     fetchInventory();
   }, []);
 
+  const filteredInventory = inventory.filter(item => {
+    const query = searchQuery.toLowerCase();
+    const matchSearch = item.sku.toLowerCase().includes(query) || item.model.toLowerCase().includes(query) || item.brand.toLowerCase().includes(query) || item.dimensions.toLowerCase().includes(query);
+    const matchBrand = selectedBrand ? item.brand === selectedBrand : true;
+    return matchSearch && matchBrand;
+  });
+
   return (
     <div className="h-full flex flex-col relative">
       {/* Header */}
@@ -108,6 +117,8 @@ export default function InventarioPage() {
             <input 
               type="text" 
               placeholder="Buscar por modelo o SKU..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="block w-full pl-9 pr-3 py-1.5 border border-zinc-200/80 rounded-md bg-zinc-50/50 text-zinc-900 placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-blue-500 sm:text-sm transition-all"
             />
           </div>
@@ -129,9 +140,19 @@ export default function InventarioPage() {
         {/* Brand Quick Filters */}
         <div className="flex items-center gap-2 shrink-0 overflow-x-auto w-full xl:w-auto pb-1 xl:pb-0 dense-scrollbar">
           <span className="text-xs font-medium text-zinc-400 mr-1">Marcas:</span>
-          <button className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-zinc-100 text-zinc-600 hover:bg-zinc-200 transition-colors">Michelin</button>
-          <button className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-zinc-100 text-zinc-600 hover:bg-zinc-200 transition-colors">Bridgestone</button>
-          <button className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-zinc-100 text-zinc-600 hover:bg-zinc-200 transition-colors">Continental</button>
+          {["Michelin", "Bridgestone", "Continental"].map(brand => (
+            <button 
+              key={brand}
+              onClick={() => setSelectedBrand(selectedBrand === brand ? null : brand)}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors ${
+                selectedBrand === brand 
+                  ? "bg-blue-600 text-white" 
+                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+              }`}
+            >
+              {brand}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -157,8 +178,8 @@ export default function InventarioPage() {
                   <SkeletonRow />
                   <SkeletonRow />
                 </>
-              ) : inventory.length > 0 ? (
-                inventory.map((item) => (
+              ) : filteredInventory.length > 0 ? (
+                filteredInventory.map((item) => (
                   <tr key={item.id} className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50/80 transition-colors group">
                     <td className="px-5 py-3 align-middle">
                       <span className="text-xs font-mono font-medium text-zinc-500 bg-zinc-100/50 px-1.5 py-0.5 rounded border border-zinc-200/50">

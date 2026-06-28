@@ -19,6 +19,7 @@ export interface Order {
 
 interface KanbanCardProps {
   order: Order;
+  onClick?: (orderId: string) => void;
 }
 
 const priorityDots: Record<OrderPriority, string> = {
@@ -36,7 +37,7 @@ function getServiceIcon(service: string) {
   return <Settings {...iconProps} />;
 }
 
-export function KanbanCard({ order }: KanbanCardProps) {
+export function KanbanCard({ order, onClick }: KanbanCardProps) {
   const {
     attributes,
     listeners,
@@ -71,8 +72,12 @@ export function KanbanCard({ order }: KanbanCardProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className="panel-card p-3 flex flex-col gap-2 relative cursor-default group hover:shadow-sm"
+      className="panel-card flex flex-col relative group hover:shadow-sm"
     >
+      <div 
+        className="p-3 flex flex-col gap-2 cursor-pointer"
+        onClick={() => onClick && onClick(order.id)}
+      >
       {/* Top line: Model + Dot (Left) / Plates + Grip (Right) */}
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-1.5 flex-1 pr-2">
@@ -86,7 +91,8 @@ export function KanbanCard({ order }: KanbanCardProps) {
           <div
             {...attributes}
             {...listeners}
-            className="text-zinc-300 hover:text-zinc-500 cursor-grab active:cursor-grabbing transition-colors"
+            className="text-zinc-300 hover:text-zinc-500 cursor-grab active:cursor-grabbing transition-colors p-1 -m-1"
+            onClick={(e) => e.stopPropagation()}
           >
             <GripVertical size={14} strokeWidth={2} />
           </div>
@@ -117,6 +123,7 @@ export function KanbanCard({ order }: KanbanCardProps) {
             {order.createdAt}
           </span>
         )}
+      </div>
       </div>
     </div>
   );
