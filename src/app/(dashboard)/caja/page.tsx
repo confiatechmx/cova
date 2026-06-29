@@ -26,7 +26,7 @@ export default function CajaPage() {
           cotizaciones (
             detalles_cotizacion ( subtotal )
           ),
-          pagos_orden ( monto_total, estatus )
+          pagos_orden ( monto_total, estatus, deleted_at )
         `)
         .in('estatus_pago', ['Pendiente', 'Parcial'])
         .order('created_at', { ascending: false });
@@ -39,7 +39,7 @@ export default function CajaPage() {
           
           // Only Approved payments count towards "Paid"
           const pagado = (order.pagos_orden || [])
-            .filter((p: any) => p.estatus === 'Aprobado')
+            .filter((p: any) => p.estatus === 'Aprobado' && p.deleted_at === null)
             .reduce((acc: number, curr: any) => acc + Number(curr.monto_total), 0);
             
           const saldo = granTotal - pagado;
@@ -62,12 +62,13 @@ export default function CajaPage() {
       const { data: transaccionesData } = await supabase
         .from('pagos_orden')
         .select(`
-          id, monto_total, proveedor_pago, estatus, fecha_pago, external_transaction_id, comision_pasarela,
+          id, monto_total, proveedor_pago, estatus, fecha_pago, external_transaction_id, comision_pasarela, deleted_at,
           ordenes_servicio (
             vehiculos ( marca, modelo, placas )
           )
         `)
         .gte('fecha_pago', today.toISOString())
+        .is('deleted_at', null)
         .order('fecha_pago', { ascending: false });
 
       if (transaccionesData) {

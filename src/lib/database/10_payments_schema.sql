@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS pagos_orden (
     monto DECIMAL(10,2) NOT NULL CHECK (monto > 0),
     metodo_pago TEXT NOT NULL CHECK (metodo_pago IN ('Efectivo', 'Tarjeta', 'Transferencia')),
     referencia TEXT,
-    fecha_pago TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+    fecha_pago TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
 
 ALTER TABLE pagos_orden ENABLE ROW LEVEL SECURITY;

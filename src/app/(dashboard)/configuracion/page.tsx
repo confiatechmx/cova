@@ -28,7 +28,7 @@ export default function ConfiguracionPage() {
       setLoading(true);
 
       // Load Config
-      const { data: empData } = await supabase.from('configuracion_empresa').select('*').limit(1).single();
+      const { data: empData } = await supabase.from('empresas').select('*').limit(1).single();
       if (empData) setEmpresa(empData);
 
       const { data: pagosData } = await supabase.from('configuracion_pagos').select('*').order('proveedor');
@@ -57,7 +57,7 @@ export default function ConfiguracionPage() {
     setSaveMessage("");
 
     if (empresa) {
-      await supabase.from('configuracion_empresa').update({
+      await supabase.from('empresas').update({
         nombre_comercial: empresa.nombre_comercial,
         rfc: empresa.rfc,
         direccion: empresa.direccion,

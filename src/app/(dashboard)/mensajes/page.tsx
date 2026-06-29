@@ -7,7 +7,7 @@ import { supabase } from "../../../lib/supabase";
 interface ChatSession {
   id: string;
   cliente_id: string | null;
-  plataforma: 'whatsapp' | 'facebook' | 'instagram';
+  canal: 'WhatsApp_Baileys' | 'WhatsApp_Cloud' | 'Facebook' | 'Instagram' | 'TikTok';
   estado: string;
   creado_en: string;
   cliente?: { nombre: string; telefono: string };
@@ -15,7 +15,7 @@ interface ChatSession {
 
 interface ChatMessage {
   id: string;
-  sender_type: 'user' | 'lead';
+  sentido: 'Entrante' | 'Saliente';
   contenido: string;
   creado_en: string;
 }
@@ -42,9 +42,9 @@ export default function MensajesInboxPage() {
   async function loadSessions() {
     setLoading(true);
     const { data } = await supabase
-      .from('conversaciones')
+      .from('conversaciones_omnicanal')
       .select('*, cliente:clientes(nombre, telefono)')
-      .order('creado_en', { ascending: false });
+      .order('ultimo_mensaje_at', { ascending: false });
     
     if (data) {
       setSessions(data as any);
@@ -54,7 +54,7 @@ export default function MensajesInboxPage() {
 
   async function loadMessages(sessionId: string) {
     const { data } = await supabase
-      .from('mensajes_crm')
+      .from('mensajes_omnicanal')
       .select('*')
       .eq('conversacion_id', sessionId)
       .order('creado_en', { ascending: true });
@@ -80,7 +80,7 @@ export default function MensajesInboxPage() {
 
     const tempMessage = {
       id: Date.now().toString(),
-      sender_type: 'user' as const,
+      sentido: 'Saliente' as const,
       contenido: newMessage,
       creado_en: new Date().toISOString()
     };
@@ -88,26 +88,30 @@ export default function MensajesInboxPage() {
     setMessages(prev => [...prev, tempMessage]);
     setNewMessage("");
 
-    await supabase.from('mensajes_crm').insert({
+    await supabase.from('mensajes_omnicanal').insert({
       conversacion_id: activeSession.id,
-      sender_type: 'user',
+      sentido: 'Saliente',
       contenido: tempMessage.contenido
     });
+    
+    // Update last message timestamp
+    await supabase.from('conversaciones_omnicanal').update({ ultimo_mensaje_at: new Date().toISOString() }).eq('id', activeSession.id);
     
     // Refresh to get actual UUID and timestamp
     loadMessages(activeSession.id);
   };
 
   const simulateIncomingLead = async () => {
-    const { data: convData, error: convErr } = await supabase.from('conversaciones').insert({
-      plataforma: 'facebook',
-      estado: 'abierto'
+    const { data: convData, error: convErr } = await supabase.from('conversaciones_omnicanal').insert({
+      canal: 'Facebook',
+      estado: 'Abierto',
+      identificador_externo: 'simulado_fb_' + Date.now()
     }).select().single();
 
     if (!convErr && convData) {
-      await supabase.from('mensajes_crm').insert({
+      await supabase.from('mensajes_omnicanal').insert({
         conversacion_id: convData.id,
-        sender_type: 'lead',
+        sentido: 'Entrante',
         contenido: "¡Hola! Vi su anuncio en Facebook. ¿Cuánto cobran por cambiar balatas de un Versa 2018?"
       });
       loadSessions();
@@ -116,8 +120,8 @@ export default function MensajesInboxPage() {
 
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
-      case 'facebook': return <Globe size={14} className="text-blue-600" />;
-      case 'instagram': return <Camera size={14} className="text-pink-600" />;
+      case 'Facebook': return <Globe size={14} className="text-blue-600" />;
+      case 'Instagram': return <Camera size={14} className="text-pink-600" />;
       default: return <MessageSquare size={14} className="text-green-500" />; // whatsapp
     }
   };
@@ -147,7 +151,7 @@ export default function MensajesInboxPage() {
       if (newClient) {
         clientId = newClient.id;
         // Vincular conversacion al nuevo cliente
-        await supabase.from('conversaciones').update({ cliente_id: clientId }).eq('id', activeSession.id);
+        await supabase.from('conversaciones_omnicanal').update({ cliente_id: clientId }).eq('id', activeSession.id);
       } else {
         alert("Error creando cliente");
         return;
@@ -227,7 +231,7 @@ export default function MensajesInboxPage() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {getPlatformIcon(session.plataforma)}
+                    {getPlatformIcon(session.canal)}
                     <span className="text-xs text-zinc-500 truncate">
                       {session.cliente?.telefono || 'Nuevo mensaje'}
                     </span>
@@ -261,8 +265,8 @@ export default function MensajesInboxPage() {
                       {activeSession.cliente?.nombre || 'Prospecto (Sin Registrar)'}
                     </span>
                     <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 font-medium">
-                      {getPlatformIcon(activeSession.plataforma)}
-                      <span className="capitalize">{activeSession.plataforma}</span>
+                      {getPlatformIcon(activeSession.canal)}
+                      <span className="capitalize">{activeSession.canal.replace('_', ' ')}</span>
                     </div>
                   </div>
                 </div>
@@ -291,7 +295,7 @@ export default function MensajesInboxPage() {
                   </span>
                 </div>
                 {messages.map((msg) => {
-                  const isUser = msg.sender_type === 'user';
+                  const isUser = msg.sentido === 'Saliente';
                   return (
                     <div key={msg.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm text-sm ${

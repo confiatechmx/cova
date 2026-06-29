@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { Loader2, User, Car, Clock, Wrench, Plus, Trash2, CheckCircle2, Package2, Banknote, CreditCard, Landmark, Smartphone } from "lucide-react";
+import { generatePaymentLink } from "@/app/actions/payments";
 
 interface OrderDetailsModalProps {
   orderId: string;
@@ -36,6 +37,48 @@ export function OrderDetailsModal({ orderId, onClose, onUpdate }: OrderDetailsMo
   const [addingPaymentLoading, setAddingPaymentLoading] = useState(false);
   const [paymentStatusMessage, setPaymentStatusMessage] = useState("");
 
+  // Supabase Realtime para Webhooks de Pago
+  useEffect(() => {
+    if (!orderId) return;
+
+    const channel = supabase
+      .channel('pagos_updates')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'pagos_orden',
+        filter: `orden_id=eq.${orderId}`
+      }, (payload) => {
+        const updatedPago = payload.new;
+        if (updatedPago.estatus === 'Aprobado') {
+          setOrder((prev: any) => {
+            if (!prev) return prev;
+            const idx = prev.pagos_orden.findIndex((p: any) => p.id === updatedPago.id);
+            if (idx === -1) return prev;
+            if (prev.pagos_orden[idx].estatus === 'Aprobado') return prev;
+            
+            const newPagos = [...prev.pagos_orden];
+            newPagos[idx] = updatedPago;
+            
+            const srvTotal = prev.orden_servicio_servicios?.reduce((a: number, c: any) => a + Number(c.precio_cobrado), 0) || 0;
+            const tireTotal = prev.cotizaciones?.detalles_cotizacion?.reduce((a: number, c: any) => a + Number(c.subtotal), 0) || 0;
+            const granT = srvTotal + tireTotal;
+            const totalPagado = newPagos.filter((p: any) => p.estatus === 'Aprobado').reduce((a: number, c: any) => a + Number(c.monto_total), 0);
+            
+            let newEstatus = 'Pendiente';
+            if (totalPagado > 0 && totalPagado < granT) newEstatus = 'Parcial';
+            if (totalPagado >= granT) newEstatus = 'Pagado';
+            
+            return { ...prev, pagos_orden: newPagos, estatus_pago: newEstatus };
+          });
+          onUpdate();
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [orderId]);
+
   useEffect(() => {
     async function loadData() {
       setLoading(true);
@@ -60,13 +103,16 @@ export function OrderDetailsModal({ orderId, onClose, onUpdate }: OrderDetailsMo
             )
           ),
           pagos_orden (
-            id, monto_total, proveedor_pago, estatus, external_transaction_id, comision_pasarela, fecha_pago
+            id, monto_total, proveedor_pago, estatus, external_transaction_id, comision_pasarela, fecha_pago, deleted_at
           )
         `)
         .eq('id', orderId)
         .single();
 
       if (!orderError && orderData) {
+        if (orderData.pagos_orden) {
+          orderData.pagos_orden = orderData.pagos_orden.filter((p: any) => p.deleted_at === null);
+        }
         setOrder(orderData);
       }
 
@@ -218,55 +264,46 @@ export function OrderDetailsModal({ orderId, onClose, onUpdate }: OrderDetailsMo
     const initialStatus = requiresHardwareIntegration ? 'Procesando' : 'Aprobado';
     const comision = providerConfig ? monto * (Number(providerConfig.comision_porcentaje) / 100) : 0;
 
-    const payload = {
-      orden_servicio_id: orderId,
-      monto_total: monto,
-      proveedor_pago: paymentProvider,
-      estatus: initialStatus,
-      comision_pasarela: comision
-    };
-
-    // 1. Create the Intent
-    const { data: intent, error } = await supabase
-      .from('pagos_orden')
-      .insert(payload)
-      .select('*')
-      .single();
-
-    if (!error && intent) {
+    if (requiresHardwareIntegration) {
+      setPaymentStatusMessage(`Generando link con ${paymentProvider}...`);
       
-      if (requiresHardwareIntegration) {
-        // SIMULATE WEBHOOK / HARDWARE DELAY
-        setPaymentStatusMessage(`Despertando terminal ${paymentProvider}...`);
+      const res = await generatePaymentLink(orderId, monto, paymentProvider as any);
+      
+      if (res.success) {
+        setPaymentStatusMessage(`Esperando pago del cliente en ${paymentProvider}...`);
         
-        // Simulating the user tapping their card / BNPL app approval
-        setTimeout(async () => {
-          setPaymentStatusMessage("Esperando autorización del banco...");
-          
-          setTimeout(async () => {
-            // Webhook received! Transaction successful.
-            const fakeTxId = `TXN-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
-            
-            const { data: approvedIntent } = await supabase
-              .from('pagos_orden')
-              .update({ estatus: 'Aprobado', external_transaction_id: fakeTxId })
-              .eq('id', intent.id)
-              .select('*')
-              .single();
-
-            if (approvedIntent) {
-              updateOrderWithNewPayment(approvedIntent);
-            }
-          }, 2000);
-          
-        }, 1500);
-
+        // Simular que mostramos el QR o Link al cliente y esperamos al Webhook
+        const { data: newPago } = await supabase.from('pagos_orden').select('*').eq('orden_id', orderId).order('created_at', { ascending: false }).limit(1).single();
+        if (newPago) {
+           const newPagos = [...(order.pagos_orden || []), newPago];
+           setOrder((prev: any) => ({ ...prev, pagos_orden: newPagos }));
+           setIsAddingPayment(false);
+           setPaymentAmount("");
+           setPaymentStatusMessage("");
+           setAddingPaymentLoading(false);
+           // Abrir link en una nueva pestaña (simulación de mandar al cliente a Kueski/MP)
+           if (res.payment_url) window.open(res.payment_url, '_blank');
+        }
       } else {
-        // Instant approval (Cash)
-        updateOrderWithNewPayment(intent);
+        alert("Error generando link: " + res.error);
+        setAddingPaymentLoading(false);
       }
     } else {
-      setAddingPaymentLoading(false);
+      const payload = {
+        orden_servicio_id: orderId,
+        monto_total: monto,
+        proveedor_pago: paymentProvider,
+        estatus: 'Aprobado',
+        comision_pasarela: comision
+      };
+
+      const { data: intent, error } = await supabase.from('pagos_orden').insert(payload).select('*').single();
+
+      if (!error && intent) {
+        updateOrderWithNewPayment(intent);
+      } else {
+        setAddingPaymentLoading(false);
+      }
     }
   };
 
@@ -294,7 +331,7 @@ export function OrderDetailsModal({ orderId, onClose, onUpdate }: OrderDetailsMo
   };
 
   const handleRemovePayment = async (pagoId: string) => {
-    const { error } = await supabase.from('pagos_orden').delete().eq('id', pagoId);
+    const { error } = await supabase.from('pagos_orden').update({ deleted_at: new Date().toISOString() }).eq('id', pagoId);
     if (!error) {
       const newPagos = order.pagos_orden.filter((p: any) => p.id !== pagoId);
       const newTotalPagado = newPagos.filter((p: any) => p.estatus === 'Aprobado').reduce((acc: number, curr: any) => acc + Number(curr.monto_total), 0);
