@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Plus, Phone, Mail, Car, Tag } from "lucide-react";
-import { supabase } from "../../../lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { Modal } from "../../../components/ui/Modal";
 import { ClientForm } from "../../../components/clientes/ClientForm";
 import { VehicleForm } from "../../../components/clientes/VehicleForm";
@@ -60,6 +60,7 @@ export default function ClientesPage() {
 
   async function fetchClients() {
     setLoading(true);
+    const supabase = createClient();
     const { data, error } = await supabase
       .from('clientes')
       .select(`

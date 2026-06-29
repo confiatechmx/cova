@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "../../lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
 
 interface ClientFormProps {
@@ -32,6 +32,7 @@ export function ClientForm({ onSuccess, onCancel }: ClientFormProps) {
     setLoading(true);
     setError("");
     
+    const supabase = createClient();
     const { error: dbError } = await supabase.from('clientes').insert({
       nombre: formData.nombre,
       telefono: formData.telefono,

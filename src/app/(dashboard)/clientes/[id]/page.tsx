@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { supabase } from "../../../../lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { ArrowLeft, User, Phone, Mail, Calendar, Car, ClipboardList, Wallet, Tag, Plus, X } from "lucide-react";
 
 interface Vehicle {
@@ -56,6 +56,7 @@ export default function ClientProfilePage() {
       if (!clientId) return;
       
       try {
+        const supabase = createClient();
         // 1. Fetch client and vehicles
         const { data: clientData, error: clientErr } = await supabase
           .from('clientes')
@@ -124,6 +125,7 @@ export default function ClientProfilePage() {
     setNewTag("");
     setIsAddingTag(false);
 
+    const supabase = createClient();
     await supabase.from('clientes').update({ tags: updatedTags }).eq('id', client.id);
   };
 
@@ -132,6 +134,7 @@ export default function ClientProfilePage() {
     const updatedTags = (client.tags || []).filter(t => t !== tagToRemove);
     
     setClient({ ...client, tags: updatedTags });
+    const supabase = createClient();
     await supabase.from('clientes').update({ tags: updatedTags }).eq('id', client.id);
   };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "../../lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { Loader2, Trash2 } from "lucide-react";
 
 interface VehicleFormProps {
@@ -46,6 +46,7 @@ export function VehicleForm({ clientId, initialData, onSuccess, onCancel }: Vehi
     };
 
     let dbError;
+    const supabase = createClient();
     if (initialData?.id) {
       const { error } = await supabase.from('vehiculos').update(payload).eq('id', initialData.id);
       dbError = error;
@@ -69,6 +70,7 @@ export function VehicleForm({ clientId, initialData, onSuccess, onCancel }: Vehi
     
     setLoading(true);
     setError("");
+    const supabase = createClient();
     const { error: dbError } = await supabase.from('vehiculos').delete().eq('id', initialData.id);
     setLoading(false);
 
