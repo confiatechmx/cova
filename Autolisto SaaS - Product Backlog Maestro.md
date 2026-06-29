@@ -12,7 +12,7 @@ A continuación se presenta el mapa de ruta crítico. Se recomienda resolver rig
 
 | ID Épica | Nombre de la Épica | Descripción Breve | Prioridad Inicial   |
 | :---- | :---- | :---- | :---- |
-| EP-01 | Arquitectura Base & Multi-tenancy | Aislamiento estricto de datos por cliente (Tenant), Supabase Auth y RLS. | **Crítica / Alta** |
+| EP-01 | Arquitectura Base & Multi-Empresa | Aislamiento estricto de datos por taller (Empresa), Supabase Auth y RLS. | **Crítica / Alta** |
 | EP-02 | Control de Accesos & Multi-sucursal | Estructura de Roles y Permisos (RBAC) y soporte para múltiples locaciones geográficas. | **Alta** |
 | EP-03 | Registro Core (Clientes & Vehículos) | Modelado y gestión de la relación de entidades principales del negocio automotriz. | **Alta** |
 | EP-04 | Operación del Taller (Órdenes de Servicio) | Catálogos, flujos dinámicos (Kanban), diagnósticos y checklists de recepción. | **Alta** |
@@ -28,13 +28,13 @@ A continuación se presenta el mapa de ruta crítico. Se recomienda resolver rig
 
 ### ---
 
-**EP-01: Arquitectura Base & Multi-tenancy**
+**EP-01: Arquitectura Base & Multi-Empresa**
 
 **Objetivo técnico:** Garantizar que la información de un taller jamás sea accesible por otro. Toda consulta a la base de datos debe estar interceptada de forma transparente.
 
 * **Feature BD-01: Aislamiento a Nivel de Datos (RLS)**  
-  * *Descripción:* Implementar políticas de Row Level Security (RLS) en la base de datos relacional. Cada tabla del sistema (clientes, vehículos, órdenes, etc.) debe incluir una columna obligatoria tenant\_id.  
-  * *Criterio de Aceptación:* Cualquier consulta SQL ejecutada bajo el contexto de una sesión de usuario debe filtrar de manera automática los registros que coincidan exclusivamente con el tenant\_id de su organización de origen. El sistema debe rechazar inserciones que omitan o falsifiquen este ID.  
+  * *Descripción:* Implementar políticas de Row Level Security (RLS) en la base de datos relacional. Cada tabla del sistema (clientes, vehículos, órdenes, etc.) debe incluir una columna obligatoria empresa\_id.  
+  * *Criterio de Aceptación:* Cualquier consulta SQL ejecutada bajo el contexto de una sesión de usuario debe filtrar de manera automática los registros que coincidan exclusivamente con el empresa\_id de su organización de origen (usando Row Level Security).
 * **Feature BD-02: Migración y Esquema Limpio**  
   * *Descripción:* Creación de scripts secuenciales de migración que permitan levantar la estructura exacta de la base de datos en ambientes locales y de producción sin pérdida de integridad.  
 * **Feature SEG-01: Autenticación Segura (Supabase Auth)**  
@@ -49,13 +49,14 @@ A continuación se presenta el mapa de ruta crítico. Se recomienda resolver rig
 * **Feature PERM-01: Matriz de Roles y Permisos (RBAC)**  
   * *Descripción:* Implementar un sistema de control de acceso basado en roles predefinidos en la plataforma.  
   * *Roles Iniciales Requeridos:*  
-    * **SuperAdmin (Cova):** Acceso total a todos los tenants, métricas globales de facturación y logs del SaaS.  
-    * **Admin de Tenant/Taller:** Acceso completo a los datos, configuraciones, sucursales y finanzas de su propio taller.  
+    * **SuperAdmin (Cova):** Acceso total a todas las empresas, métricas globales de facturación y logs del SaaS.  
+    * **Admin de Empresa/Taller:** Acceso completo a los datos, configuraciones, sucursales y finanzas de su propia empresa.  
     * **Recepcionista / Asesor:** Capacidad para registrar clientes, vehículos, abrir órdenes de servicio y procesar cobros en caja. No puede alterar configuraciones críticas del sistema.  
-    * **Técnico / Mecánico:** Interfaz simplificada para visualizar órdenes asignadas, registrar avances en el diagnóstico, checklist e inventario de refacciones usadas. Sin acceso a módulos financieros.  
-* **Feature SUC-01: Soporte Multicursal**  
-  * *Descripción:* Capacidad de un Tenant de registrar múltiples ubicaciones físicas (Sucursales).  
-  * *Criterio de Aceptación:* El sistema debe permitir ligar usuarios, inventarios, cajas chicas y órdenes de servicio a una sucursal específica. El administrador global del taller puede cambiar entre sucursales mediante un selector en el frontend para consolidar o aislar la visualización de datos.
+    * **Técnico / Mecánico:** Interfaz simplificada para visualizar órdenes asignadas, registrar avances en el diagnóstico, checklist e inventario de refacciones usadas. Sin acceso a módulos financieros.
+  * *Nota Arquitectónica (Deuda):* Actualmente existe redundancia en BD (tabla `empleados` vs `perfiles`). Se debe unificar en una sola tabla de usuarios vinculada a Supabase Auth.
+* **Feature SUC-01: Soporte Multi-Sucursal (Pendiente en DB)**  
+  * *Descripción:* Capacidad de una Empresa de registrar múltiples ubicaciones físicas (Sucursales).  
+  * *Criterio de Aceptación:* Actualmente todos los datos apuntan a la empresa. Se debe diseñar la tabla `sucursales` en la base de datos y migrar el sistema para permitir ligar usuarios, inventarios, cajas y órdenes a una sucursal específica.
 
  
 
@@ -165,6 +166,6 @@ A continuación se presenta el mapa de ruta crítico. Se recomienda resolver rig
 
 Para asegurar que las herramientas de asistencia en el código no omitan las variables cruzadas del sistema (como romper el Multi-tenant al programar el catálogo de servicios), se establece el siguiente protocolo estricto de prompts:
 
-1. **Inyección de Contexto Arquitectónico:** Antes de codificar cualquier módulo, comparta el archivo de esquema de base de datos actual y declare el principio de aislamiento: *"Este sistema es un SaaS llamado Autolisto, de arquitectura Multi-tenant basada en la columna tenant\_id. Toda tabla e interacción que propongas debe heredar y respetar este aislamiento."*  
+1. **Inyección de Contexto Arquitectónico:** Antes de codificar cualquier módulo, comparta el archivo de esquema de base de datos actual y declare el principio de aislamiento: *"Este sistema es un SaaS llamado Autolisto, de arquitectura Multi-Empresa basada en la columna empresa\_id. Toda tabla e interacción que propongas debe heredar y respetar este aislamiento mediante RLS."*  
 2. **Desarrollo en Aislamiento Funcional:** Enfoque los prompts en un único ID de Feature a la vez (ej. Trabajar únicamente en TAL-02: Checklist de Recepción Digital). Solicite explícitamente que no se modifiquen ni se asuman implementaciones de otros componentes no listados en el prompt.  
 3. **Validación Preventiva de Regresión:** Exija a la IA la provisión de pruebas unitarias para el feature generado que comprueben tanto el camino exitoso (happy path) como la contención de seguridad (ej. comprobar que un usuario con rol Técnico no pueda consumir un endpoint financiero de Caja).
