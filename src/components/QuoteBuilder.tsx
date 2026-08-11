@@ -16,7 +16,8 @@ import {
   Square,
   Sparkles,
   Loader2,
-  AlertTriangle
+  AlertTriangle,
+  Landmark
 } from 'lucide-react';
 import { toast } from 'sonner';
 import ModalAltaExpress from './ModalAltaExpress';
@@ -797,16 +798,16 @@ export default function QuoteBuilder({
   }
 
   return (
-    <div className="panel-card p-5 flex flex-col h-full bg-white">
+    <div className="bg-card shadow-sm rounded-lg p-5 flex flex-col h-full">
       {/* Title block */}
-      <div className="pb-4 mb-4 border-b-hairline">
-        <h2 className="text-sm font-semibold tracking-tight text-charcoal flex items-center gap-2">
+      <div className="pb-4 mb-4 border-b border-slate-200">
+        <h2 className="text-sm font-semibold tracking-tight text-slate-900 flex items-center gap-2">
           <span>Cotizador Express</span>
           <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 font-mono text-emerald-700 border border-emerald-100 font-semibold uppercase">
             Fase 1 Activa
           </span>
         </h2>
-        <p className="text-xs text-charcoal-light mt-0.5">
+        <p className="text-xs text-slate-500 mt-0.5">
           Ingreso ágil de órdenes y servicios rápidos
         </p>
       </div>
@@ -817,14 +818,14 @@ export default function QuoteBuilder({
           {/* Client Select with Inline Button */}
           <div className="flex gap-1.5 items-end">
             <div className="relative flex-1">
-              <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-charcoal-light/60 uppercase tracking-wider flex items-center gap-1">
+              <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                 <User className="w-2.5 h-2.5" />
                 <span>Cliente</span>
               </label>
               <select
                 value={selectedClientId}
                 onChange={(e) => setSelectedClientId(e.target.value)}
-                className="w-full bg-white border border-hairline rounded pt-4 pb-1 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 transition-colors appearance-none cursor-pointer"
+                className="w-full bg-white border border-slate-200 rounded pt-4 pb-1 px-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors appearance-none cursor-pointer"
               >
                 {loadingData ? (
                   <option>Cargando clientes...</option>
@@ -841,7 +842,7 @@ export default function QuoteBuilder({
               type="button"
               onClick={() => setIsAltaExpressOpen(true)}
               title="Alta Express de Cliente y Vehículo"
-              className="h-[34px] w-[34px] flex items-center justify-center bg-white hover:bg-neutral-50 border border-hairline hover:border-neutral-400 text-cova-blue hover:text-cova-blue/80 rounded transition-colors cursor-pointer flex-shrink-0"
+              className="h-[34px] w-[34px] flex items-center justify-center bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-primary hover:text-primary/80 rounded transition-colors cursor-pointer flex-shrink-0"
             >
               <Plus className="w-4 h-4" />
             </button>
@@ -850,7 +851,7 @@ export default function QuoteBuilder({
           {/* Vehicle Select with Inline Button */}
           <div className="flex gap-1.5 items-end">
             <div className="relative flex-1">
-              <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-charcoal-light/60 uppercase tracking-wider flex items-center gap-1">
+              <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                 <Car className="w-2.5 h-2.5" />
                 <span>Vehículo</span>
               </label>
@@ -858,7 +859,7 @@ export default function QuoteBuilder({
                 value={selectedVehicleId}
                 onChange={(e) => setSelectedVehicleId(e.target.value)}
                 disabled={!selectedClientId}
-                className="w-full bg-white border border-hairline rounded pt-4 pb-1 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 transition-colors appearance-none cursor-pointer disabled:bg-neutral-50 disabled:cursor-not-allowed"
+                className="w-full bg-white border border-slate-200 rounded pt-4 pb-1 px-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors appearance-none cursor-pointer disabled:bg-slate-50 disabled:cursor-not-allowed"
               >
                 {currentClient?.vehiculos && currentClient.vehiculos.length > 0 ? (
                   currentClient.vehiculos.map((v) => (
@@ -876,7 +877,7 @@ export default function QuoteBuilder({
               disabled={!selectedClientId}
               onClick={() => setIsAltaVehiculoOpen(true)}
               title="Añadir Auto Adicional para este Cliente"
-              className="h-[34px] w-[34px] flex items-center justify-center bg-white hover:bg-neutral-50 border border-hairline hover:border-neutral-400 text-cova-blue hover:text-cova-blue/80 rounded transition-colors cursor-pointer flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-hairline"
+              className="h-[34px] w-[34px] flex items-center justify-center bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-primary hover:text-primary/80 rounded transition-colors cursor-pointer flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-slate-200"
             >
               <Plus className="w-4 h-4" />
             </button>
@@ -890,15 +891,15 @@ export default function QuoteBuilder({
               setIsModalOpen(true);
               fetchServiceHistory(currentVehicle.id);
             }}
-            className="bg-neutral-50 hover:bg-neutral-100/80 cursor-pointer border border-hairline hover:border-neutral-300 rounded p-2 text-[10px] text-charcoal-light font-mono flex items-center justify-between gap-x-4 gap-y-1 transition-all select-none"
+            className="bg-slate-50 hover:bg-slate-100 cursor-pointer border border-slate-200 rounded p-2 text-[10px] text-slate-500 font-mono flex items-center justify-between gap-x-4 gap-y-1 transition-all select-none"
             title="Haga clic para ver Ficha Clínica"
           >
             <div className="flex flex-wrap gap-x-4 gap-y-1">
-              <span><strong>VIN:</strong> {currentVehicle.vin ? currentVehicle.vin.substr(0, 8) + '...' : 'No reg'}</span>
-              <span><strong>Placas:</strong> {currentVehicle.placas}</span>
-              <span><strong>OEM:</strong> {currentVehicle.medida_oem || 'Ver specs'}</span>
+              <span><strong>VIN:</strong> <span className="tabular-nums">{currentVehicle.vin ? currentVehicle.vin.substr(0, 8) + '...' : 'No reg'}</span></span>
+              <span><strong>Placas:</strong> <span className="tabular-nums">{currentVehicle.placas}</span></span>
+              <span><strong>OEM:</strong> <span className="tabular-nums">{currentVehicle.medida_oem || 'Ver specs'}</span></span>
             </div>
-            <span className="text-[9px] font-sans font-semibold text-charcoal flex items-center gap-0.5 bg-neutral-200/60 px-1.5 py-0.5 rounded">
+            <span className="text-[9px] font-sans font-semibold text-slate-900 flex items-center gap-0.5 bg-slate-200/60 px-1.5 py-0.5 rounded">
               <span>Ver Ficha Clínica</span>
               <span>→</span>
             </span>
@@ -908,30 +909,30 @@ export default function QuoteBuilder({
 
       {/* Selected Items List */}
       <div className="flex-1 min-h-[160px] mb-4 flex flex-col">
-        <label className="text-[10px] font-semibold text-charcoal-light/60 uppercase tracking-wider mb-2 block">
+        <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2 block">
           Llantas Seleccionadas
         </label>
         
         {selectedItems.length === 0 ? (
-          <div className="flex-1 border border-dashed border-hairline rounded flex flex-col items-center justify-center p-6 text-center bg-neutral-50/50">
-            <FileText className="w-6 h-6 text-neutral-300 mb-1.5" />
-            <p className="text-xs font-medium text-charcoal">La cotización está vacía</p>
-            <p className="text-[10px] text-charcoal-light mt-0.5 max-w-[200px]">
+          <div className="flex-1 border border-dashed border-slate-200 rounded flex flex-col items-center justify-center p-6 text-center bg-slate-50/50">
+            <FileText className="w-6 h-6 text-slate-300 mb-1.5" />
+            <p className="text-xs font-medium text-slate-900">La cotización está vacía</p>
+            <p className="text-[10px] text-slate-500 mt-0.5 max-w-[200px]">
               Selecciona medidas de llanta en la matriz y presiona (+) para agregarlas aquí.
             </p>
           </div>
         ) : (
-          <div className="flex-1 border border-hairline rounded divide-y divide-neutral-100 overflow-auto dense-scrollbar max-h-[160px]">
+          <div className="flex-1 border border-slate-200 rounded divide-y divide-slate-100 overflow-auto dense-scrollbar max-h-[160px]">
             {selectedItems.map((item) => {
               const itemTotal = item.precioUnitario * item.cantidad;
               return (
-                <div key={item.tire.id} className="p-2.5 flex items-center justify-between hover:bg-neutral-50/50 transition-colors">
+                <div key={item.tire.id} className="p-2.5 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
                   <div className="flex-1 pr-3">
-                    <div className="text-xs font-semibold text-charcoal">
+                    <div className="text-sm font-semibold text-slate-900">
                       {item.tire.marca} - {item.tire.modelo_llanta}
                     </div>
-                    <div className="text-[10px] text-charcoal-light/75 font-mono mt-0.5">
-                      {item.tire.ancho}/{item.tire.perfil} R{item.tire.rin} • {item.tire.indice_carga_velocidad}
+                    <div className="tabular-nums text-sm font-semibold text-slate-900 mt-0.5">
+                      {item.tire.ancho}/{item.tire.perfil} R{item.tire.rin} <span className="text-[10px] text-slate-500 font-normal">• {item.tire.indice_carga_velocidad}</span>
                     </div>
                   </div>
 
@@ -939,28 +940,28 @@ export default function QuoteBuilder({
                   <div className="flex items-center gap-1.5 mr-4">
                     <button
                       onClick={() => onUpdateQuantity(item.tire.id, -1)}
-                      className="p-1 rounded border border-hairline hover:bg-neutral-50 hover:border-neutral-400 transition-colors text-charcoal"
+                      className="p-1 rounded border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-colors text-slate-900"
                     >
                       <Minus className="w-2.5 h-2.5" />
                     </button>
-                    <span className="text-xs font-mono font-bold w-4 text-center text-charcoal">
+                    <span className="tabular-nums text-sm font-semibold text-slate-900 w-4 text-center">
                       {item.cantidad}
                     </span>
                     <button
                       onClick={() => onUpdateQuantity(item.tire.id, 1)}
                       disabled={item.cantidad >= item.tire.stock_actual}
-                      className="p-1 rounded border border-hairline hover:bg-neutral-50 hover:border-neutral-400 transition-colors text-charcoal disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="p-1 rounded border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-colors text-slate-900 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <Plus className="w-2.5 h-2.5" />
                     </button>
                   </div>
 
                   {/* Price */}
-                  <div className="text-right pr-3 font-mono">
-                    <div className="text-xs font-semibold text-charcoal">
+                  <div className="text-right pr-3">
+                    <div className="tabular-nums text-sm font-semibold text-slate-900">
                       ${itemTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                     </div>
-                    <div className="text-[9px] text-charcoal-light/60">
+                    <div className="tabular-nums text-[10px] text-slate-500">
                       ${item.precioUnitario.toLocaleString('es-MX', { minimumFractionDigits: 2 })} c/u
                     </div>
                   </div>
@@ -968,7 +969,7 @@ export default function QuoteBuilder({
                   {/* Trash */}
                   <button
                     onClick={() => onRemoveItem(item.tire.id)}
-                    className="p-1 rounded hover:bg-red-50 hover:text-red-600 border border-transparent hover:border-red-100 text-neutral-400 transition-all"
+                    className="p-1 rounded hover:bg-red-50 hover:text-red-600 border border-transparent hover:border-red-100 text-slate-400 transition-all"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -980,9 +981,9 @@ export default function QuoteBuilder({
       </div>
 
       {/* Auto Service Packages toggles */}
-      <div className="mb-4 space-y-2 border-t-hairline pt-3">
+      <div className="mb-4 space-y-2 border-t border-slate-200 pt-3">
         <div className="flex items-center justify-between mb-1">
-          <label className="text-[10px] font-semibold text-charcoal-light/60 uppercase tracking-wider">
+          <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
             Paquetes y Adicionales
           </label>
           {qualifiesForFreeAlignment && (
@@ -1008,26 +1009,26 @@ export default function QuoteBuilder({
                   return next;
                 });
               }}
-              className={`flex items-center justify-between p-2 rounded border transition-all cursor-pointer select-none ${
+              className={`flex items-center justify-between p-2 rounded-md border transition-all cursor-pointer select-none ${
                 isSelected
-                  ? 'border-neutral-400 bg-neutral-50'
-                  : 'border-hairline bg-white hover:bg-neutral-50/50'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-slate-200 bg-white hover:bg-slate-50/50'
               }`}
             >
               <div className="flex items-center gap-2">
                 {isSelected ? (
-                  <CheckSquare className="w-4 h-4 text-charcoal" />
+                  <CheckSquare className="w-4 h-4 text-primary" />
                 ) : (
-                  <Square className="w-4 h-4 text-neutral-300" />
+                  <Square className="w-4 h-4 text-slate-300" />
                 )}
                 <div>
-                  <p className="text-xs font-semibold text-charcoal">{srv.nombre}</p>
-                  <p className="text-[9px] text-charcoal-light/75 max-w-[200px] truncate">
+                  <p className="text-sm font-semibold text-slate-900">{srv.nombre}</p>
+                  <p className="text-[10px] text-slate-500 max-w-[200px] truncate">
                     {srv.descripcion || 'Servicio de taller'}
                   </p>
                 </div>
               </div>
-              <span className={`text-xs font-mono font-bold ${isPromo ? 'text-emerald-600' : 'text-charcoal'}`}>
+              <span className={`tabular-nums text-sm font-semibold ${isPromo ? 'text-success' : 'text-slate-900'}`}>
                 {isPromo ? '¡GRATIS!' : `$${Number(srv.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`}
               </span>
             </div>
@@ -1036,18 +1037,18 @@ export default function QuoteBuilder({
       </div>
 
       {/* Quote summary block */}
-      <div className="bg-neutral-50 border border-hairline rounded p-4 mb-4 mt-auto">
-        <div className="flex justify-between text-xs text-charcoal-light">
+      <div className="bg-slate-50 border border-slate-200 rounded-md p-4 mb-4 mt-auto">
+        <div className="flex justify-between text-sm text-slate-500">
           <span>Subtotal llantas:</span>
-          <span className="font-mono">${subtotalTires.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+          <span className="tabular-nums font-semibold text-slate-900">${subtotalTires.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
         </div>
-        <div className="flex justify-between text-xs text-charcoal-light mt-1.5">
+        <div className="flex justify-between text-sm text-slate-500 mt-1.5">
           <span>Servicios y paquetes:</span>
-          <span className="font-mono">${subtotalServices.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+          <span className="tabular-nums font-semibold text-slate-900">${subtotalServices.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
         </div>
-        <div className="flex justify-between text-sm font-bold text-charcoal border-t border-dashed border-hairline pt-2 mt-2">
+        <div className="flex justify-between items-center text-sm font-bold text-slate-900 border-t border-dashed border-slate-300 pt-2 mt-2">
           <span>Total Cotización:</span>
-          <span className="font-mono text-base">${grandTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-[10px] font-normal text-charcoal-light">MXN</span></span>
+          <span className="tabular-nums text-lg tracking-tight">${grandTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-[10px] font-normal text-slate-500">MXN</span></span>
         </div>
       </div>
 
@@ -1057,38 +1058,38 @@ export default function QuoteBuilder({
         <button
           onClick={handleGeneratePdf}
           disabled={selectedItems.length === 0 || isGeneratingPdf}
-          className={`w-full text-xs font-semibold flex items-center justify-center gap-2 px-3 py-2.5 rounded border transition-all ${
+          className={`w-full text-sm font-semibold flex items-center justify-center gap-2 px-3 py-2.5 rounded-md border transition-colors ${
             selectedItems.length === 0
-              ? 'bg-neutral-50 border-neutral-200 text-neutral-300 cursor-not-allowed'
-              : 'bg-white border-hairline hover:border-neutral-400 hover:bg-neutral-50 text-charcoal shadow-sm hover:-translate-y-0.5 hover:shadow-md'
+              ? 'bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed'
+              : 'border-slate-200 text-slate-700 hover:bg-slate-50'
           }`}
         >
           {isGeneratingPdf ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" />
           ) : pdfGenerated ? (
-            <Check className="w-3.5 h-3.5 text-emerald-600" />
+            <Check className="w-4 h-4 text-success" />
           ) : (
-            <FileText className="w-3.5 h-3.5" />
+            <FileText className="w-4 h-4" />
           )}
           <span>{isGeneratingPdf ? 'Generando...' : pdfGenerated ? '¡PDF Creado!' : 'Generar PDF'}</span>
         </button>
 
-        {/* WhatsApp Send Button (Oxford Brand Blue) */}
+        {/* WhatsApp Send Button (Success style) */}
         <button
           onClick={handleSaveAndWhatsapp}
           disabled={selectedItems.length === 0 || isSendingWhatsapp}
-          className={`w-full text-xs font-semibold flex items-center justify-center gap-2 px-3 py-2.5 rounded border transition-all ${
+          className={`w-full text-sm font-semibold flex items-center justify-center gap-2 px-3 py-2.5 rounded-md transition-colors ${
             selectedItems.length === 0
-              ? 'bg-neutral-50 border-neutral-200 text-neutral-300 cursor-not-allowed'
-              : 'bg-cova-blue border-cova-blue text-ceramic shadow-sm hover:-translate-y-0.5 hover:shadow-md'
+              ? 'bg-slate-50 border border-slate-200 text-slate-300 cursor-not-allowed'
+              : 'bg-success hover:bg-success/90 text-white shadow-sm'
           }`}
         >
           {isSendingWhatsapp ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+            <Loader2 className="w-4 h-4 animate-spin text-white" />
           ) : whatsappSent ? (
-            <Check className="w-3.5 h-3.5 text-emerald-400" />
+            <Check className="w-4 h-4 text-white" />
           ) : (
-            <Send className="w-3.5 h-3.5" />
+            <Send className="w-4 h-4" />
           )}
           <span>{isSendingWhatsapp ? 'Enviando...' : whatsappSent ? '¡Enviado!' : 'WhatsApp'}</span>
         </button>
@@ -1103,10 +1104,10 @@ export default function QuoteBuilder({
           setIsCheckoutOpen(true);
         }}
         disabled={selectedItems.length === 0}
-        className={`w-full mt-3 text-xs font-bold flex items-center justify-center gap-2 px-3 py-3 rounded border transition-all ${
+        className={`w-full mt-3 text-sm font-semibold flex items-center justify-center gap-2 px-3 py-3 rounded-lg border transition-colors ${
           selectedItems.length === 0
-            ? 'bg-neutral-50 border-neutral-200 text-neutral-300 cursor-not-allowed'
-            : 'bg-cova-blue hover:bg-cova-blue/95 border-cova-blue text-white shadow-md cursor-pointer hover:-translate-y-0.5 hover:shadow-lg'
+            ? 'bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed'
+            : 'bg-primary hover:bg-primary/90 border-primary text-white shadow-md cursor-pointer'
         }`}
       >
         <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1117,9 +1118,9 @@ export default function QuoteBuilder({
       </button>
 
       {/* Operational Audit Log timeline */}
-      <div className="mt-5 border-t border-hairline pt-4 flex flex-col">
+      <div className="mt-5 border-t border-slate-200 pt-4 flex flex-col">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] font-semibold text-charcoal-light/60 uppercase tracking-wider">
+          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
             Bitácora Operativa (Audit Log)
           </span>
           <button 
@@ -1129,15 +1130,15 @@ export default function QuoteBuilder({
               message: 'Bitácora reiniciada',
               type: 'info'
             }])}
-            className="text-[9px] text-neutral-400 hover:text-neutral-600 transition-colors font-mono"
+            className="text-[9px] text-slate-400 hover:text-slate-600 transition-colors font-mono"
           >
             Limpiar
           </button>
         </div>
         
-        <div className="bg-neutral-50 border border-hairline rounded p-2.5 max-h-[120px] overflow-auto dense-scrollbar space-y-2 text-[10px]">
+        <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5 max-h-[120px] overflow-auto dense-scrollbar space-y-2 text-[10px]">
           {logs.map((log) => {
-            let badgeStyle = 'bg-neutral-200 text-neutral-600';
+            let badgeStyle = 'bg-slate-200 text-slate-600';
             if (log.type === 'add') badgeStyle = 'bg-emerald-50 text-emerald-700 border border-emerald-100';
             if (log.type === 'remove') badgeStyle = 'bg-red-50 text-red-700 border border-red-100';
             if (log.type === 'success') badgeStyle = 'bg-emerald-100 text-emerald-800 font-bold';
@@ -1145,11 +1146,11 @@ export default function QuoteBuilder({
             
             return (
               <div key={log.id} className="flex gap-2 items-start leading-relaxed font-mono">
-                <span className="text-neutral-400 flex-shrink-0">{log.timestamp}</span>
+                <span className="text-slate-400 flex-shrink-0 tabular-nums">{log.timestamp}</span>
                 <span className={`px-1 py-0.5 rounded text-[8px] uppercase tracking-wider flex-shrink-0 ${badgeStyle}`}>
                   {log.type}
                 </span>
-                <span className="text-charcoal flex-1">{log.message}</span>
+                <span className="text-slate-900 flex-1">{log.message}</span>
               </div>
             );
           })}
@@ -1158,45 +1159,45 @@ export default function QuoteBuilder({
 
       {/* Clinical Vehicle Modal */}
       {isModalOpen && currentVehicle && (
-        <div className="fixed inset-0 bg-neutral-900/20 backdrop-blur-[1px] flex items-center justify-center p-4 z-50">
-          <div className="bg-white border border-hairline rounded-lg shadow-lg max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-card border border-slate-200 rounded-lg shadow-md max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="bg-neutral-50 p-4 border-b border-hairline flex items-center justify-between">
+            <div className="bg-slate-50 p-4 border-b border-slate-200 flex items-center justify-between">
               <div>
-                <h3 className="text-xs font-semibold text-charcoal uppercase tracking-wider flex items-center gap-1.5">
-                  <Car className="w-3.5 h-3.5" />
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <Car className="w-4 h-4" />
                   <span>Ficha Clínica del Vehículo</span>
                 </h3>
-                <p className="text-[11px] text-charcoal-light font-medium mt-0.5">
-                  {currentVehicle.marca} {currentVehicle.modelo} {currentVehicle.anio} • {currentVehicle.placas}
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                  {currentVehicle.marca} {currentVehicle.modelo} <span className="tabular-nums">{currentVehicle.anio}</span> • <span className="tabular-nums">{currentVehicle.placas}</span>
                 </p>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="text-neutral-400 hover:text-charcoal transition-colors text-xs font-bold font-sans p-1"
+                className="text-slate-400 hover:text-slate-900 transition-colors text-xs font-bold font-sans p-1"
               >
                 ✕
               </button>
             </div>
 
             {/* Tabs Selector */}
-            <div className="flex border-b border-hairline bg-white text-xs">
+            <div className="flex border-b border-slate-200 bg-white text-xs">
               <button 
                 onClick={() => setModalTab('history')}
-                className={`flex-1 py-2 text-center font-medium border-b-2 transition-all ${
+                className={`flex-1 py-3 text-center font-semibold border-b-2 transition-all ${
                   modalTab === 'history' 
-                    ? 'border-charcoal text-charcoal' 
-                    : 'border-transparent text-neutral-400 hover:text-charcoal'
+                    ? 'border-primary text-primary' 
+                    : 'border-transparent text-slate-500 hover:text-slate-900'
                 }`}
               >
                 Historial de Servicios
               </button>
               <button 
                 onClick={() => setModalTab('specs')}
-                className={`flex-1 py-2 text-center font-medium border-b-2 transition-all ${
+                className={`flex-1 py-3 text-center font-semibold border-b-2 transition-all ${
                   modalTab === 'specs' 
-                    ? 'border-charcoal text-charcoal' 
-                    : 'border-transparent text-neutral-400 hover:text-charcoal'
+                    ? 'border-primary text-primary' 
+                    : 'border-transparent text-slate-500 hover:text-slate-900'
                 }`}
               >
                 Especificaciones OEM
@@ -1207,53 +1208,53 @@ export default function QuoteBuilder({
             <div className="p-4 max-h-[300px] overflow-auto dense-scrollbar">
               {modalTab === 'history' ? (
                 loadingHistory ? (
-                  <div className="py-8 text-center text-xs text-charcoal-light animate-pulse font-mono">Cargando historial clínico...</div>
+                  <div className="py-8 text-center text-xs text-slate-500 animate-pulse font-mono">Cargando historial clínico...</div>
                 ) : serviceHistory.length === 0 ? (
-                  <div className="py-8 text-center text-xs text-neutral-400 font-mono">Sin registros de servicio previos.</div>
+                  <div className="py-8 text-center text-xs text-slate-400 font-mono">Sin registros de servicio previos.</div>
                 ) : (
                   <div className="space-y-3">
                     {serviceHistory.map((service, idx) => (
-                      <div key={idx} className="p-2.5 rounded border border-hairline bg-neutral-50/50 hover:bg-neutral-50 transition-colors">
-                        <div className="flex items-center justify-between text-[10px] font-mono text-neutral-400 mb-1">
-                          <span>{service.fecha}</span>
-                          <span className="font-semibold text-charcoal-light">${parseFloat(service.costo).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                      <div key={idx} className="p-3 rounded-md border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                        <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 mb-1">
+                          <span className="tabular-nums">{service.fecha}</span>
+                          <span className="font-bold text-slate-900 tabular-nums">${parseFloat(service.costo).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
                         </div>
-                        <p className="text-xs text-charcoal leading-relaxed font-medium">{service.descripcion}</p>
+                        <p className="text-xs text-slate-700 leading-relaxed font-medium">{service.descripcion}</p>
                       </div>
                     ))}
                   </div>
                 )
               ) : (
                 <div className="space-y-4 text-xs">
-                  <div className="grid grid-cols-2 gap-3 bg-neutral-50 p-3 rounded border border-hairline font-mono">
+                  <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-md border border-slate-200 font-mono">
                     <div>
-                      <span className="text-[10px] text-neutral-400 block uppercase font-sans">Medida OEM de Agencia</span>
-                      <span className="text-xs font-semibold text-charcoal">{currentVehicle.medida_oem || '205/55 R16'}</span>
+                      <span className="text-[10px] text-slate-500 block uppercase font-sans font-semibold">Medida OEM de Agencia</span>
+                      <span className="text-sm font-bold text-slate-900 tabular-nums">{currentVehicle.medida_oem || '205/55 R16'}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-neutral-400 block uppercase font-sans">Tipo Vehículo</span>
-                      <span className="text-xs font-semibold text-charcoal">Pasajero / Sedán</span>
+                      <span className="text-[10px] text-slate-500 block uppercase font-sans font-semibold">Tipo Vehículo</span>
+                      <span className="text-sm font-bold text-slate-900">Pasajero / Sedán</span>
                     </div>
                   </div>
 
-                  <div className="border border-hairline rounded overflow-hidden">
-                    <div className="bg-neutral-50 px-3 py-1.5 border-b border-hairline text-[10px] font-semibold text-charcoal uppercase tracking-wider">
+                  <div className="border border-slate-200 rounded-md overflow-hidden">
+                    <div className="bg-slate-50 px-3 py-2 border-b border-slate-200 text-[10px] font-bold text-slate-900 uppercase tracking-wider">
                       Presión de Inflado Recomendada
                     </div>
-                    <div className="grid grid-cols-2 divide-x divide-neutral-100 p-3 font-mono">
+                    <div className="grid grid-cols-2 divide-x divide-slate-200 p-3 font-mono">
                       <div className="text-center">
-                        <span className="text-[10px] text-neutral-400 block font-sans">Eje Delantero</span>
-                        <span className="text-lg font-bold text-charcoal">{currentVehicle.presion_delantera_psi || 32} PSI</span>
+                        <span className="text-[10px] text-slate-500 block font-sans font-semibold">Eje Delantero</span>
+                        <span className="text-lg font-bold text-slate-900 tabular-nums">{currentVehicle.presion_delantera_psi || 32} PSI</span>
                       </div>
                       <div className="text-center">
-                        <span className="text-[10px] text-neutral-400 block font-sans">Eje Trasero</span>
-                        <span className="text-lg font-bold text-charcoal">{currentVehicle.presion_trasera_psi || 32} PSI</span>
+                        <span className="text-[10px] text-slate-500 block font-sans font-semibold">Eje Trasero</span>
+                        <span className="text-lg font-bold text-slate-900 tabular-nums">{currentVehicle.presion_trasera_psi || 32} PSI</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-amber-50 border border-amber-100 rounded p-2.5 text-[11px] text-amber-700 leading-relaxed flex gap-2">
-                    <AlertTriangle className="w-4.5 h-4.5 flex-shrink-0 mt-0.5 text-amber-600" />
+                  <div className="bg-amber-50 border border-amber-200 rounded-md p-3 text-xs text-amber-800 leading-relaxed flex gap-2">
+                    <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 text-amber-600" />
                     <span>
                       <strong>Nota de calibración:</strong> Siempre calibre la presión de inflado en frío (antes de circular más de 2 km) para asegurar la máxima durabilidad y precisión.
                     </span>
@@ -1262,11 +1263,11 @@ export default function QuoteBuilder({
               )}
             </div>
 
-            {/* Modal Footer (Oxford Brand Blue Button) */}
-            <div className="bg-neutral-50 px-4 py-3 border-t border-hairline flex justify-end">
+            {/* Modal Footer */}
+            <div className="bg-slate-50 px-4 py-3 border-t border-slate-200 flex justify-end">
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="bg-cova-blue text-ceramic shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-xs px-3.5 py-1.5 rounded font-semibold"
+                className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-colors text-sm px-4 py-2 rounded-md font-semibold"
               >
                 Entendido
               </button>
@@ -1277,33 +1278,33 @@ export default function QuoteBuilder({
 
       {/* Checkout POS Modal */}
       {isCheckoutOpen && (
-        <div className="fixed inset-0 z-50 bg-charcoal/30 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white border border-hairline rounded-lg w-full max-w-sm p-5 shadow-lg relative animate-in fade-in zoom-in-95 duration-200 flex flex-col gap-4 font-sans text-xs text-charcoal">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card p-6 rounded-xl shadow-md border border-slate-200 w-full max-w-sm relative animate-in fade-in zoom-in-95 duration-200 flex flex-col gap-5">
             {/* Header */}
             <button 
               onClick={() => setIsCheckoutOpen(false)}
-              className="absolute right-4 top-4 text-neutral-400 hover:text-charcoal cursor-pointer"
+              className="absolute right-5 top-5 text-slate-400 hover:text-slate-900 cursor-pointer transition-colors"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
 
-            <div className="flex items-center gap-2 border-b-hairline pb-3">
-              <svg className="w-4 h-4 text-cova-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-              <h3 className="text-xs font-bold text-charcoal uppercase tracking-wider font-mono">
-                Checkout de Venta (POS)
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-4">
+              <Landmark className="w-5 h-5 text-slate-900" />
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                Caja y Transacción
               </h3>
             </div>
 
-            <div className="space-y-4">
-              <div className="bg-neutral-50 border border-hairline rounded p-3 text-center">
-                <span className="text-[10px] text-neutral-400 uppercase font-mono tracking-wider">Total a Cobrar</span>
-                <div className="text-xl font-bold font-mono text-charcoal mt-1">
-                  ${grandTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-xs font-normal text-charcoal-light">MXN</span>
+            <div className="space-y-5">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-5 text-center flex flex-col items-center justify-center">
+                <span className="text-xs text-slate-500 uppercase font-semibold tracking-wider">Total a Cobrar</span>
+                <div className="text-3xl font-bold text-slate-900 tabular-nums tracking-tight mt-1">
+                  ${grandTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                 </div>
               </div>
 
-              <div className="relative">
-                <label className="absolute left-2.5 top-1.5 text-[8px] font-semibold text-charcoal-light/60 uppercase tracking-wider">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Método de Pago
                 </label>
                 <select
@@ -1317,7 +1318,7 @@ export default function QuoteBuilder({
                       setAmountReceived('');
                     }
                   }}
-                  className="w-full bg-white border border-hairline rounded pt-4 pb-1.5 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 cursor-pointer"
+                  className="w-full h-10 bg-white border border-slate-300 rounded-md px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer font-medium shadow-sm"
                 >
                   <option value="Efectivo">Efectivo</option>
                   <option value="Tarjeta">Tarjeta de Débito/Crédito</option>
@@ -1326,33 +1327,33 @@ export default function QuoteBuilder({
               </div>
 
               {paymentMethod === 'Efectivo' ? (
-                <div className="relative">
-                  <label className="absolute left-2.5 top-1.5 text-[8px] font-semibold text-charcoal-light/60 uppercase tracking-wider">
-                    Monto Recibido *
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    Monto Recibido
                   </label>
                   <input
                     type="number"
                     required
                     min={0}
                     step="0.01"
-                    placeholder="Ingrese cantidad en pesos"
+                    placeholder="0.00"
                     value={amountReceived}
                     onChange={(e) => setAmountReceived(e.target.value)}
-                    className="w-full bg-white border border-hairline rounded pt-4 pb-1.5 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 font-mono font-bold"
+                    className="w-full h-12 bg-white border border-slate-300 rounded-md px-3 text-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent font-medium tabular-nums shadow-sm"
                   />
                 </div>
               ) : (
-                <div className="relative bg-neutral-50/50 border border-hairline rounded p-2.5 flex justify-between items-center text-xs">
-                  <span className="text-neutral-400">Monto Cargado:</span>
-                  <span className="font-bold font-mono text-charcoal">${grandTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                <div className="bg-slate-50 border border-slate-200 rounded-md p-3 flex justify-between items-center text-sm shadow-inner">
+                  <span className="text-slate-500 font-medium">Monto Cargado:</span>
+                  <span className="font-bold tabular-nums text-slate-900">${grandTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
                 </div>
               )}
 
               {paymentMethod === 'Efectivo' && (
-                <div className="border border-dashed border-hairline rounded p-2.5 bg-neutral-50/50 flex justify-between items-center font-mono">
-                  <span className="text-[10px] text-neutral-400 font-sans uppercase">Cambio a Entregar:</span>
-                  <span className={`text-sm font-bold ${
-                    parseFloat(amountReceived) >= grandTotal ? 'text-emerald-600' : 'text-red-500'
+                <div className="border border-dashed border-slate-300 rounded-md p-3 bg-slate-50 flex justify-between items-center">
+                  <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Cambio a Entregar:</span>
+                  <span className={`text-lg font-bold tabular-nums ${
+                    parseFloat(amountReceived) >= grandTotal ? 'text-slate-900' : 'text-destructive'
                   }`}>
                     {amountReceived && parseFloat(amountReceived) >= grandTotal
                       ? `$${(parseFloat(amountReceived) - grandTotal).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`
@@ -1365,11 +1366,11 @@ export default function QuoteBuilder({
               )}
             </div>
 
-            <div className="flex items-center gap-2 pt-3 border-t border-hairline mt-1">
+            <div className="flex items-center gap-3 pt-4 border-t border-slate-200 mt-2">
               <button
                 type="button"
                 onClick={() => setIsCheckoutOpen(false)}
-                className="flex-1 py-2 text-xs font-semibold text-charcoal hover:bg-neutral-50 border border-hairline rounded cursor-pointer"
+                className="flex-1 h-12 text-sm font-semibold text-slate-600 hover:bg-slate-100 border border-slate-200 rounded-lg cursor-pointer transition-colors"
               >
                 Cancelar
               </button>
@@ -1377,12 +1378,12 @@ export default function QuoteBuilder({
                 type="button"
                 onClick={handleConfirmPayment}
                 disabled={isProcessingPayment || (paymentMethod === 'Efectivo' && (!amountReceived || parseFloat(amountReceived) < grandTotal))}
-                className="flex-1 py-2 text-xs font-semibold text-ceramic bg-cova-blue border border-cova-blue hover:shadow-md rounded cursor-pointer flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex-[2] h-12 bg-success hover:bg-success/90 text-white rounded-lg text-lg font-medium shadow-sm transition-colors cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isProcessingPayment ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  <Check className="w-3.5 h-3.5 text-white" />
+                  <Check className="w-5 h-5" />
                 )}
                 <span>Confirmar Pago</span>
               </button>

@@ -5,13 +5,25 @@ import { supabase } from '@/lib/supabase';
 import { Clock, ArrowRight, Check, AlertTriangle, Loader2, Image as ImageIcon, X } from 'lucide-react';
 import { toast } from 'sonner';
 
+export type OrderStatus = 
+  | 'En Espera / Recepción' 
+  | 'En Diagnóstico' 
+  | 'Por Autorizar' 
+  | 'En Proceso / Reparación' 
+  | 'Por Validar / Control de Calidad' 
+  | 'Terminado / Listo para Entrega'
+  // Legacy states for backward compatibility
+  | 'En Fila' 
+  | 'En Proceso' 
+  | 'Listo para Entrega';
+
 export interface BoardOrder {
   id: string;
   vehiculo_id: string;
   nivel_gasolina: string;
   kilometraje_ingreso: number;
   notas_recepcion: string;
-  estado: 'En Fila' | 'En Proceso' | 'Listo para Entrega';
+  estado: OrderStatus;
   fecha_ingreso: string;
   vehiculos: {
     marca: string;
@@ -31,6 +43,23 @@ export interface TallerBoardRef {
   refreshBoard: () => void;
 }
 
+const COLUMNS = [
+  'En Espera / Recepción',
+  'En Diagnóstico',
+  'Por Autorizar',
+  'En Proceso / Reparación',
+  'Por Validar / Control de Calidad',
+  'Terminado / Listo para Entrega'
+] as const;
+
+// Helper to normalize legacy statuses into new ones
+const normalizeStatus = (status: OrderStatus): typeof COLUMNS[number] => {
+  if (status === 'En Fila') return 'En Espera / Recepción';
+  if (status === 'En Proceso') return 'En Proceso / Reparación';
+  if (status === 'Listo para Entrega') return 'Terminado / Listo para Entrega';
+  return status as typeof COLUMNS[number];
+};
+
 const MOCK_ORDERS: BoardOrder[] = [
   {
     id: '11eebc99-9c0b-4ef8-bb6d-6bb9bd380e01',
@@ -38,19 +67,9 @@ const MOCK_ORDERS: BoardOrder[] = [
     nivel_gasolina: '1/4',
     kilometraje_ingreso: 72050,
     notas_recepcion: 'Cliente reporta un rechinido constante al frenar a baja velocidad.',
-    estado: 'En Fila',
-    fecha_ingreso: new Date(Date.now() - 120 * 60000).toISOString(), // 2 hours ago
+    estado: 'En Espera / Recepción',
+    fecha_ingreso: new Date(Date.now() - 120 * 60000).toISOString(),
     vehiculos: { marca: 'Chevrolet', modelo: 'Aveo', anio: 2018, placas: 'VMY-789-B' }
-  },
-  {
-    id: '11eebc99-9c0b-4ef8-bb6d-6bb9bd380e04',
-    vehiculo_id: 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99',
-    nivel_gasolina: 'Lleno',
-    kilometraje_ingreso: 89000,
-    notas_recepcion: 'Servicio de cambio de amortiguadores delanteros y revisión de bujes de suspensión.',
-    estado: 'En Fila',
-    fecha_ingreso: new Date(Date.now() - 300 * 60000).toISOString(), // 5 hours ago
-    vehiculos: { marca: 'Nissan', modelo: 'NP300', anio: 2019, placas: 'VMX-456-D' }
   },
   {
     id: '11eebc99-9c0b-4ef8-bb6d-6bb9bd380e02',
@@ -58,8 +77,8 @@ const MOCK_ORDERS: BoardOrder[] = [
     nivel_gasolina: '3/4',
     kilometraje_ingreso: 35080,
     notas_recepcion: 'Montaje de 4 llantas nuevas Goodyear Wrangler y alineación / balanceo.',
-    estado: 'En Proceso',
-    fecha_ingreso: new Date(Date.now() - 240 * 60000).toISOString(), // 4 hours ago
+    estado: 'En Proceso / Reparación',
+    fecha_ingreso: new Date(Date.now() - 240 * 60000).toISOString(),
     vehiculos: { marca: 'Toyota', modelo: 'Hilux', anio: 2021, placas: 'VNZ-123-C' }
   },
   {
@@ -68,8 +87,8 @@ const MOCK_ORDERS: BoardOrder[] = [
     nivel_gasolina: '1/2',
     kilometraje_ingreso: 45010,
     notas_recepcion: 'Alineación y Balanceo de rutina. Calibración general de llantas.',
-    estado: 'Listo para Entrega',
-    fecha_ingreso: new Date(Date.now() - 60 * 60000).toISOString(), // 1 hour ago
+    estado: 'Terminado / Listo para Entrega',
+    fecha_ingreso: new Date(Date.now() - 60 * 60000).toISOString(),
     vehiculos: { marca: 'Nissan', modelo: 'Versa', anio: 2020, placas: 'VJS-456-A' }
   }
 ];
@@ -79,8 +98,6 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
   const [mechanics, setMechanics] = useState<{ id: string; nombre: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-
-  // Modal State
   const [viewingDamagesOrder, setViewingDamagesOrder] = useState<BoardOrder | null>(null);
 
   const fetchOrders = async () => {
@@ -97,24 +114,14 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
           estado,
           fecha_ingreso,
           mecanico_id,
-          vehiculos (
-            marca,
-            modelo,
-            anio,
-            placas
-          ),
-          checklist_danos (
-            zona_vehiculo,
-            tipo_dano,
-            url_foto
-          )
+          vehiculos (marca, modelo, anio, placas),
+          checklist_danos (zona_vehiculo, tipo_dano, url_foto)
         `)
         .order('fecha_ingreso', { ascending: true });
 
       if (error) throw error;
 
       if (data && data.length > 0) {
-        // Cast related vehicle table join correctly
         const formatted = data.map((item: any) => ({
           ...item,
           vehiculos: Array.isArray(item.vehiculos) ? item.vehiculos[0] : item.vehiculos
@@ -147,7 +154,6 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
     }
   };
 
-  // Expose the refresh action to parent component using imperitative handle
   useImperativeHandle(ref, () => ({
     refreshBoard() {
       fetchOrders();
@@ -160,14 +166,14 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
     fetchMechanics();
   }, []);
 
-  // Update order state (move card)
-  const handleMoveOrder = async (orderId: string, currentStatus: BoardOrder['estado']) => {
-    let nextStatus: BoardOrder['estado'] = 'En Fila';
-    if (currentStatus === 'En Fila') nextStatus = 'En Proceso';
-    else if (currentStatus === 'En Proceso') nextStatus = 'Listo para Entrega';
-    else return; // If already ready, no next status
-
+  const handleMoveOrder = async (orderId: string, currentStatus: OrderStatus) => {
+    const normalized = normalizeStatus(currentStatus);
+    const currentIndex = COLUMNS.indexOf(normalized);
+    if (currentIndex === -1 || currentIndex === COLUMNS.length - 1) return;
+    
+    const nextStatus = COLUMNS[currentIndex + 1];
     setUpdatingId(orderId);
+    
     try {
       const { error } = await supabase
         .from('ordenes_servicio')
@@ -176,10 +182,9 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
 
       if (error) throw error;
 
-      // --- AUTOMATION: Avisar Auto Listo rule ---
-      if (nextStatus === 'Listo para Entrega') {
+      // Automation Rule Execution
+      if (nextStatus === 'Terminado / Listo para Entrega') {
         try {
-          // 1. Check if the rule is active
           const { data: ruleData, error: ruleErr } = await supabase
             .from('reglas_automatizacion')
             .select('activa')
@@ -187,36 +192,17 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
             .single();
 
           if (!ruleErr && ruleData?.activa) {
-            // 2. Fetch order details with vehicle and client info
             const { data: orderDetails, error: detailsErr } = await supabase
               .from('ordenes_servicio')
-              .select(`
-                kilometraje_ingreso,
-                vehiculos (
-                  marca,
-                  modelo,
-                  placas,
-                  clientes (
-                    nombre,
-                    telefono
-                  )
-                )
-              `)
+              .select('kilometraje_ingreso, vehiculos(marca, modelo, placas, clientes(nombre, telefono))')
               .eq('id', orderId)
               .single();
 
             if (!detailsErr && orderDetails) {
-              const vehicle = Array.isArray(orderDetails.vehiculos) 
-                ? orderDetails.vehiculos[0] 
-                : orderDetails.vehiculos;
-              
+              const vehicle = Array.isArray(orderDetails.vehiculos) ? orderDetails.vehiculos[0] : orderDetails.vehiculos;
               if (vehicle) {
-                const client = Array.isArray(vehicle.clientes)
-                  ? vehicle.clientes[0]
-                  : vehicle.clientes;
-
+                const client = Array.isArray(vehicle.clientes) ? vehicle.clientes[0] : vehicle.clientes;
                 if (client && client.telefono) {
-                  // 3. Fetch template
                   const { data: templateData, error: templateErr } = await supabase
                     .from('plantillas_notificacion')
                     .select('contenido')
@@ -230,15 +216,9 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
                       .replace('{{vehiculo}}', vehicleName)
                       .replace('{{kilometraje}}', orderDetails.kilometraje_ingreso.toString());
 
-                    // 4. Enqueue notification
                     await supabase
                       .from('cola_notificaciones')
-                      .insert({
-                        telefono: client.telefono,
-                        mensaje: message,
-                        estado: 'Pendiente'
-                      });
-                    console.log('Notificación de auto listo encolada exitosamente');
+                      .insert({ telefono: client.telefono, mensaje: message, estado: 'Pendiente' });
                   }
                 }
               }
@@ -249,13 +229,12 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
         }
       }
       
-      // Update local state directly
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, estado: nextStatus } : o));
       toast.success('Estado actualizado');
     } catch (err) {
       console.error('Error moving order status:', err);
       toast.error('Error al cambiar el estado de la orden');
-      // Mock update
+      // Mock update to keep UI fluid on errors
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, estado: nextStatus } : o));
     } finally {
       setUpdatingId(null);
@@ -270,8 +249,6 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
         .eq('id', orderId);
 
       if (error) throw error;
-      
-      // Update local state directly
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, mecanico_id: mecanicoId } : o));
       toast.success('Mecánico asignado');
     } catch (err) {
@@ -280,13 +257,12 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
     }
   };
 
-  // Complete/archive order
   const handleArchiveOrder = async (orderId: string) => {
     setUpdatingId(orderId);
     try {
       const { error } = await supabase
         .from('ordenes_servicio')
-        .delete() // Deleting represents vehicle checkout from patio in this phase
+        .delete()
         .eq('id', orderId);
 
       if (error) throw error;
@@ -296,7 +272,6 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
     } catch (err) {
       console.error('Error checking out vehicle:', err);
       toast.error('Error al registrar la salida del vehículo');
-      // Mock update
       setOrders(prev => prev.filter(o => o.id !== orderId));
     } finally {
       setUpdatingId(null);
@@ -313,197 +288,195 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
     return `Hace ${diffHours}h ${diffMins % 60}m`;
   };
 
-  // Filter columns
-  const enFilaOrders = orders.filter(o => o.estado === 'En Fila');
-  const enProcesoOrders = orders.filter(o => o.estado === 'En Proceso');
-  const listoOrders = orders.filter(o => o.estado === 'Listo para Entrega');
-
-  const columns = [
-    { key: 'En Fila', title: 'En Fila', data: enFilaOrders, badgeStyle: 'bg-neutral-100 text-neutral-800' },
-    { key: 'En Proceso', title: 'En Proceso', data: enProcesoOrders, badgeStyle: 'bg-blue-50 text-cova-blue border border-blue-100 font-bold' },
-    { key: 'Listo para Entrega', title: 'Listo para Entrega', data: listoOrders, badgeStyle: 'bg-emerald-50 text-emerald-800 border border-emerald-100 font-bold' }
-  ] as const;
+  if (loading) {
+    return (
+      <div className="w-full h-64 flex items-center justify-center">
+        <span className="text-sm font-medium text-slate-500 animate-pulse">Cargando tablero operativo...</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full flex flex-col h-full gap-4">
-      {loading ? (
-        <div className="py-16 text-center text-xs text-charcoal-light animate-pulse font-medium">
-          Cargando tablero operativo...
-        </div>
-      ) : (
-        <div className="flex md:grid overflow-x-auto hide-scrollbar snap-x md:grid-cols-3 gap-5 pb-2">
-          {columns.map((col) => (
-            <div key={col.key} className="flex-none w-[85vw] md:w-auto snap-center flex flex-col gap-3.5 bg-neutral-50/50 border border-hairline rounded-lg p-3.5 min-h-[500px]">
+    <div className="w-full flex flex-col h-full">
+      {/* Contenedor Principal (Horizontal Scroll) */}
+      <div className="flex flex-row overflow-x-auto gap-6 pb-4 items-start h-full [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {COLUMNS.map((colName) => {
+          const colOrders = orders.filter(o => normalizeStatus(o.estado) === colName);
+          
+          return (
+            <div 
+              key={colName} 
+              className="flex-shrink-0 w-[340px] flex flex-col gap-4 bg-slate-50/70 p-4 rounded-xl border border-slate-200/50 min-h-[500px]"
+            >
               {/* Column Header */}
-              <div className="flex items-center justify-between pb-2 border-b-hairline">
-                <span className="text-xs font-bold text-charcoal uppercase tracking-wider">
-                  {col.title}
-                </span>
-                <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full ${col.badgeStyle}`}>
-                  {col.data.length}
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-800">
+                  {colName}
+                </h3>
+                <span className="text-xs font-semibold tabular-nums text-slate-500 bg-slate-200/50 px-2.5 py-0.5 rounded-full">
+                  {colOrders.length}
                 </span>
               </div>
 
               {/* Cards Container */}
-              <div className="flex flex-col gap-2.5 overflow-auto dense-scrollbar flex-1 max-h-[550px]">
-                {col.data.length === 0 ? (
-                  <div className="py-10 text-center border border-dashed border-hairline rounded-lg bg-white/40 flex flex-col items-center justify-center p-4">
-                    <Clock className="w-5 h-5 text-neutral-300 mb-1.5" />
-                    <p className="text-[10px] font-medium text-neutral-400">Sin vehículos en esta etapa</p>
+              <div className="flex flex-col gap-3">
+                {colOrders.length === 0 ? (
+                  <div className="py-8 text-center border border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center">
+                    <p className="text-xs font-medium text-slate-400">Sin órdenes en esta etapa</p>
                   </div>
                 ) : (
-                  col.data.map((order) => (
-                    <div key={order.id} className="panel-card p-3 flex flex-col gap-2 bg-white">
-                      {/* Card Header: Plates & Timing */}
-                      <div className="flex items-center justify-between">
-                        {/* Plates representation resembling Mexican plate style */}
-                        <div className="bg-[#E2E8F0] border border-neutral-300 rounded px-1.5 py-0.5 text-[10px] font-mono font-bold text-charcoal tracking-wide uppercase">
-                          {order.vehiculos?.placas}
+                  colOrders.map((order) => (
+                    <div 
+                      key={order.id} 
+                      className="bg-card p-4 rounded-lg shadow-sm border border-slate-200 cursor-grab active:cursor-grabbing hover:bg-slate-50/80 transition-all duration-200 flex flex-col gap-3"
+                    >
+                      {/* Top row: Badges and ID */}
+                      <div className="flex justify-between items-start">
+                        <div className="flex gap-2">
+                          <span className="inline-flex items-center rounded-full border border-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider bg-slate-100/50 tabular-nums">
+                            {order.vehiculos?.placas}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-1 text-[9px] text-charcoal-light/70 font-mono">
-                          <Clock className="w-3 h-3 text-neutral-400" />
-                          <span>{getElapsedTime(order.fecha_ingreso)}</span>
-                        </div>
+                        <span className="text-[10px] font-normal text-slate-400 tabular-nums uppercase tracking-wider">
+                          ID: {order.id.slice(0, 8)}
+                        </span>
                       </div>
 
-                      {/* Vehicle Model & Gas */}
+                      {/* Main Title: Vehicle */}
                       <div>
-                        <h4 className="text-xs font-semibold text-charcoal leading-snug">
-                          {order.vehiculos?.marca} {order.vehiculos?.modelo}
+                        <h4 className="text-base font-semibold text-slate-900 leading-snug">
+                          {order.vehiculos?.marca} {order.vehiculos?.modelo} <span className="tabular-nums font-normal text-slate-500">{order.vehiculos?.anio}</span>
                         </h4>
-                        <div className="flex items-center gap-2 mt-1 font-mono text-[9px] text-charcoal-light">
-                          <span>Año: {order.vehiculos?.anio}</span>
-                          <span>•</span>
-                          <span>Gasolina: {order.nivel_gasolina}</span>
-                          <span>•</span>
-                          <span>KM: {order.kilometraje_ingreso.toLocaleString()}</span>
+                        <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-500">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span className="tabular-nums">{getElapsedTime(order.fecha_ingreso)}</span>
                         </div>
                       </div>
 
-                      {/* Notes / Requested Service */}
-                      {order.notas_recepcion && (
-                        <div className="bg-neutral-50 border border-hairline rounded p-2 text-[10px] text-charcoal-light leading-relaxed font-sans italic max-h-[50px] overflow-hidden text-ellipsis">
-                          "{order.notas_recepcion}"
+                      {/* Order Metrics / Info */}
+                      <div className="grid grid-cols-2 gap-2 py-2 border-y border-slate-100">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-0.5">Kilometraje</span>
+                          <span className="text-xs font-medium text-slate-700 tabular-nums">{order.kilometraje_ingreso.toLocaleString()} km</span>
                         </div>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-0.5">Gasolina</span>
+                          <span className="text-xs font-medium text-slate-700 tabular-nums">{order.nivel_gasolina}</span>
+                        </div>
+                      </div>
+
+                      {/* Reception Notes */}
+                      {order.notas_recepcion && (
+                        <p className="text-xs text-slate-600 italic line-clamp-2 leading-relaxed bg-slate-50 p-2 rounded-md border border-slate-100">
+                          "{order.notas_recepcion}"
+                        </p>
                       )}
 
                       {/* Damages Badge */}
                       {order.checklist_danos && order.checklist_danos.length > 0 && (
                         <button 
                           onClick={() => setViewingDamagesOrder(order)}
-                          className="flex items-center gap-1.5 self-start bg-rose-50 border border-rose-200 text-rose-700 px-2 py-1 rounded text-[9px] font-bold mt-1 hover:bg-rose-100 transition-colors"
+                          className="inline-flex items-center gap-1.5 self-start rounded-full border border-rose-200 px-2.5 py-0.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors"
                         >
-                          <AlertTriangle className="w-3 h-3" />
-                          Daños Registrados ({order.checklist_danos.length})
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          Daños ({order.checklist_danos.length})
                         </button>
                       )}
 
-                      {/* Mechanic Assignment */}
-                      <div className="mt-1.5 flex items-center justify-between text-[10px]">
-                        <span className="text-neutral-400 font-sans">Mecánico Asignado:</span>
-                        <select
-                          value={order.mecanico_id || ''}
-                          onChange={(e) => handleAssignMechanic(order.id, e.target.value)}
-                          className="bg-white border border-hairline rounded px-1.5 py-0.5 text-[9px] text-charcoal focus:outline-none focus:border-neutral-400 cursor-pointer font-sans"
-                        >
-                          <option value="" disabled>Seleccionar...</option>
-                          {mechanics.map(m => (
-                            <option key={m.id} value={m.id}>{m.nombre}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Action trigger button */}
-                      <div className="mt-1 pt-2 border-t border-neutral-100 flex justify-end">
-                        {order.estado === 'En Fila' && (
-                          <button
-                            onClick={() => handleMoveOrder(order.id, order.estado)}
-                            disabled={updatingId === order.id}
-                            className="text-[9px] font-bold bg-white hover:bg-neutral-50 text-charcoal border border-hairline hover:border-neutral-400 rounded px-4 py-2.5 md:px-2.5 md:py-1.5 transition-all flex items-center gap-1 hover:-translate-y-0.5 shadow-sm active:translate-y-0 cursor-pointer"
+                      {/* Mechanic & Action */}
+                      <div className="flex flex-col gap-2 mt-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-medium text-slate-500">Mecánico:</span>
+                          <select
+                            value={order.mecanico_id || ''}
+                            onChange={(e) => handleAssignMechanic(order.id, e.target.value)}
+                            className="bg-transparent border-b border-dashed border-slate-300 text-slate-700 font-medium focus:outline-none focus:border-primary cursor-pointer pb-0.5 text-right w-[120px]"
                           >
-                            {updatingId === order.id ? (
-                              <Loader2 className="w-2.5 h-2.5 animate-spin" />
-                            ) : (
-                              <ArrowRight className="w-2.5 h-2.5 text-cova-blue" />
-                            )}
-                            <span>Iniciar Trabajo</span>
-                          </button>
-                        )}
-
-                        {order.estado === 'En Proceso' && (
-                          <button
-                            onClick={() => handleMoveOrder(order.id, order.estado)}
-                            disabled={updatingId === order.id}
-                            className="text-[9px] font-bold bg-cova-blue hover:shadow-md text-ceramic border border-cova-blue rounded px-4 py-2.5 md:px-2.5 md:py-1.5 transition-all flex items-center gap-1 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-                          >
-                            {updatingId === order.id ? (
-                              <Loader2 className="w-2.5 h-2.5 animate-spin text-white" />
-                            ) : (
-                              <Check className="w-2.5 h-2.5 text-white" />
-                            )}
-                            <span>Terminar Trabajo</span>
-                          </button>
-                        )}
-
-                        {order.estado === 'Listo para Entrega' && (
-                          <button
-                            onClick={() => handleArchiveOrder(order.id)}
-                            disabled={updatingId === order.id}
-                            className="text-[9px] font-bold bg-[#E2E8F0] hover:bg-[#CBD5E1] text-[#111111] border border-neutral-300 hover:border-neutral-400 rounded px-4 py-2.5 md:px-2.5 md:py-1.5 transition-all flex items-center gap-1 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-                          >
-                            {updatingId === order.id ? (
-                              <Loader2 className="w-2.5 h-2.5 animate-spin" />
-                            ) : (
-                              <Check className="w-2.5 h-2.5 text-cova-blue" />
-                            )}
-                            <span>Dar Salida</span>
-                          </button>
-                        )}
+                            <option value="" disabled>Asignar...</option>
+                            {mechanics.map(m => (
+                              <option key={m.id} value={m.id}>{m.nombre}</option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        {/* Action Buttons based on status */}
+                        <div className="mt-2 pt-3 border-t border-slate-100 flex justify-end">
+                          {colName !== 'Terminado / Listo para Entrega' ? (
+                            <button
+                              onClick={() => handleMoveOrder(order.id, colName)}
+                              disabled={updatingId === order.id}
+                              className="text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-md px-3 py-1.5 flex items-center gap-1.5 transition-colors shadow-sm disabled:opacity-50"
+                            >
+                              {updatingId === order.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <ArrowRight className="w-3.5 h-3.5 text-primary" />
+                              )}
+                              <span>Siguiente Fase</span>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleArchiveOrder(order.id)}
+                              disabled={updatingId === order.id}
+                              className="text-xs font-semibold text-white bg-primary hover:bg-primary/90 rounded-md px-3 py-1.5 flex items-center gap-1.5 transition-colors shadow-sm disabled:opacity-50"
+                            >
+                              {updatingId === order.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Check className="w-3.5 h-3.5" />
+                              )}
+                              <span>Entregar y Cerrar</span>
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))
                 )}
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </div>
 
       {/* Modal Galería de Daños */}
       {viewingDamagesOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-4 border-b border-hairline bg-neutral-50">
-              <h3 className="text-sm font-bold text-charcoal flex items-center gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-lg shadow-sm border border-slate-200 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
+              <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-rose-500" />
                 Daños en Recepción
               </h3>
               <button 
                 onClick={() => setViewingDamagesOrder(null)}
-                className="text-neutral-400 hover:text-charcoal transition-colors p-1"
+                className="text-slate-400 hover:text-slate-700 transition-colors p-1"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
             
             <div className="p-5">
-              <div className="mb-4">
-                <p className="text-xs font-semibold text-charcoal">
-                  Vehículo: {viewingDamagesOrder.vehiculos?.marca} {viewingDamagesOrder.vehiculos?.modelo} ({viewingDamagesOrder.vehiculos?.placas})
+              <div className="mb-5">
+                <p className="text-sm font-medium text-slate-900">
+                  {viewingDamagesOrder.vehiculos?.marca} {viewingDamagesOrder.vehiculos?.modelo} <span className="tabular-nums font-normal text-slate-500">({viewingDamagesOrder.vehiculos?.placas})</span>
                 </p>
-                <p className="text-[10px] text-neutral-500 mt-0.5">
-                  Revisado el {new Date(viewingDamagesOrder.fecha_ingreso).toLocaleString('es-MX')}
+                <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span className="tabular-nums">Revisado el {new Date(viewingDamagesOrder.fecha_ingreso).toLocaleString('es-MX')}</span>
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto dense-scrollbar">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto">
                 {viewingDamagesOrder.checklist_danos?.map((dano, i) => (
-                  <div key={i} className="border border-hairline rounded-lg overflow-hidden bg-neutral-50/50 flex flex-col">
-                    <div className="p-2 border-b border-hairline">
-                      <p className="text-[11px] font-bold text-charcoal">{dano.zona_vehiculo}</p>
-                      <p className="text-[9px] font-mono text-rose-600 bg-rose-50 inline-block px-1.5 rounded mt-0.5 uppercase tracking-wide border border-rose-100">{dano.tipo_dano}</p>
+                  <div key={i} className="border border-slate-200 rounded-md overflow-hidden bg-white shadow-sm flex flex-col">
+                    <div className="p-2 border-b border-slate-100 bg-slate-50">
+                      <p className="text-xs font-semibold text-slate-800">{dano.zona_vehiculo}</p>
+                      <span className="inline-flex mt-1 text-[10px] font-semibold uppercase tracking-wider text-rose-600 bg-rose-50 border border-rose-100 px-1.5 py-0.5 rounded">
+                        {dano.tipo_dano}
+                      </span>
                     </div>
-                    <div className="flex-1 min-h-[120px] relative bg-neutral-100 flex items-center justify-center">
+                    <div className="flex-1 min-h-[140px] relative bg-slate-100 flex items-center justify-center">
                       {dano.url_foto ? (
                         <img 
                           src={dano.url_foto} 
@@ -512,9 +485,9 @@ const TallerBoard = forwardRef<TallerBoardRef, {}>((props, ref) => {
                           onClick={() => window.open(dano.url_foto!, '_blank')}
                         />
                       ) : (
-                        <div className="flex flex-col items-center justify-center text-neutral-400 gap-1.5 p-4 text-center">
+                        <div className="flex flex-col items-center justify-center text-slate-400 gap-2 p-4 text-center">
                           <ImageIcon className="w-6 h-6 opacity-50" />
-                          <span className="text-[9px]">Sin evidencia fotográfica</span>
+                          <span className="text-[10px] font-medium">Sin fotografía</span>
                         </div>
                       )}
                     </div>
