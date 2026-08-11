@@ -235,93 +235,93 @@ export default function InventarioDashboard() {
       {/* Bento Grid Analytics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Stock Total */}
-        <div className="panel-card p-4 bg-white flex items-center justify-between shadow-sm">
+        <div className="bg-card p-4 rounded-xl flex items-center justify-between shadow-sm border border-slate-200">
           <div>
-            <span className="text-[10px] text-charcoal-light uppercase font-mono tracking-wider font-semibold">
+            <span className="text-[10px] text-slate-500 uppercase font-mono tracking-wider font-semibold">
               Stock Total
             </span>
-            <h3 className="text-2xl font-extrabold text-charcoal mt-1 tracking-tight">
-              {totalStock.toLocaleString()} <span className="text-xs font-semibold text-neutral-400">pzas</span>
+            <h3 className="text-2xl font-extrabold text-slate-900 mt-1 tracking-tight tabular-nums">
+              {totalStock.toLocaleString()} <span className="text-xs font-semibold text-slate-400">pzas</span>
             </h3>
-            <p className="text-[9px] text-charcoal-light/70 mt-1 font-mono">
+            <p className="text-[9px] text-slate-500/70 mt-1 font-mono">
               Existencia global en patio
             </p>
           </div>
-          <div className="p-3 bg-neutral-50 border border-hairline rounded">
-            <Package className="w-5 h-5 text-cova-blue" />
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+            <Package className="w-5 h-5 text-primary" />
           </div>
         </div>
 
         {/* Card 2: Modelos Únicos */}
-        <div className="panel-card p-4 bg-white flex items-center justify-between shadow-sm">
+        <div className="bg-card p-4 rounded-xl flex items-center justify-between shadow-sm border border-slate-200">
           <div>
-            <span className="text-[10px] text-charcoal-light uppercase font-mono tracking-wider font-semibold">
+            <span className="text-[10px] text-slate-500 uppercase font-mono tracking-wider font-semibold">
               Modelos Únicos
             </span>
-            <h3 className="text-2xl font-extrabold text-charcoal mt-1 tracking-tight">
-              {uniqueModels} <span className="text-xs font-semibold text-neutral-400">medidas</span>
+            <h3 className="text-2xl font-extrabold text-slate-900 mt-1 tracking-tight tabular-nums">
+              {uniqueModels} <span className="text-xs font-semibold text-slate-400">medidas</span>
             </h3>
-            <p className="text-[9px] text-charcoal-light/70 mt-1 font-mono">
+            <p className="text-[9px] text-slate-500/70 mt-1 font-mono">
               Registros en catálogo
             </p>
           </div>
-          <div className="p-3 bg-neutral-50 border border-hairline rounded">
-            <Layers className="w-5 h-5 text-neutral-600" />
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+            <Layers className="w-5 h-5 text-slate-600" />
           </div>
         </div>
 
         {/* Card 3: Alertas Críticas */}
-        <div className="panel-card p-4 bg-white flex items-center justify-between shadow-sm">
+        <div className="bg-card p-4 rounded-xl flex items-center justify-between shadow-sm border border-slate-200">
           <div>
-            <span className="text-[10px] text-charcoal-light uppercase font-mono tracking-wider font-semibold">
+            <span className="text-[10px] text-slate-500 uppercase font-mono tracking-wider font-semibold">
               Stock Crítico
             </span>
-            <h3 className={`text-2xl font-extrabold mt-1 tracking-tight ${criticalItems > 0 ? 'text-red-600' : 'text-charcoal'}`}>
-              {criticalItems} <span className="text-xs font-semibold text-neutral-400">alertas</span>
+            <h3 className={`text-2xl font-extrabold mt-1 tracking-tight tabular-nums ${criticalItems > 0 ? 'text-destructive' : 'text-slate-900'}`}>
+              {criticalItems} <span className="text-xs font-semibold text-slate-400">alertas</span>
             </h3>
-            <p className="text-[9px] text-charcoal-light/70 mt-1 font-mono">
+            <p className="text-[9px] text-slate-500/70 mt-1 font-mono">
               Igual o menor al stock mínimo
             </p>
           </div>
-          <div className={`p-3 border rounded ${criticalItems > 0 ? 'bg-red-50 border-red-100' : 'bg-neutral-50 border-hairline'}`}>
-            <AlertTriangle className={`w-5 h-5 ${criticalItems > 0 ? 'text-red-600' : 'text-neutral-500'}`} />
+          <div className={`p-3 border rounded-lg ${criticalItems > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}`}>
+            <AlertTriangle className={`w-5 h-5 ${criticalItems > 0 ? 'text-destructive' : 'text-slate-500'}`} />
           </div>
         </div>
 
         {/* Card 4: Valorización */}
-        <div className="panel-card p-4 bg-white flex items-center justify-between shadow-sm">
+        <div className="bg-card p-4 rounded-xl flex items-center justify-between shadow-sm border border-slate-200">
           <div>
-            <span className="text-[10px] text-charcoal-light uppercase font-mono tracking-wider font-semibold">
+            <span className="text-[10px] text-slate-500 uppercase font-mono tracking-wider font-semibold">
               Valorización Activos (Costo)
             </span>
-            <h3 className="text-xl font-extrabold text-charcoal mt-1.5 tracking-tight font-mono">
+            <h3 className="text-xl font-extrabold text-slate-900 mt-1.5 tracking-tight font-mono tabular-nums">
               ${totalAdquisitionValue.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
             </h3>
-            <p className="text-[9px] text-charcoal-light/70 mt-1 font-mono flex items-center gap-1">
-              <TrendingUp className="w-3 h-3 text-emerald-600" />
-              <span>Margen Promedio: <strong>{avgMargin.toFixed(1)}%</strong></span>
+            <p className="text-[9px] text-slate-500/70 mt-1 font-mono flex items-center gap-1">
+              <TrendingUp className="w-3 h-3 text-success" />
+              <span>Margen Promedio: <strong className="tabular-nums">{avgMargin.toFixed(1)}%</strong></span>
             </p>
           </div>
-          <div className="p-3 bg-neutral-50 border border-hairline rounded">
-            <TrendingUp className="w-5 h-5 text-emerald-600" />
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+            <TrendingUp className="w-5 h-5 text-success" />
           </div>
         </div>
       </div>
 
       {/* Main Table Panel */}
-      <div className="panel-card p-5 bg-white flex flex-col shadow-sm">
+      <div className="bg-card rounded-xl p-5 flex flex-col shadow-sm border border-slate-200">
         {/* Controls: Search, Filters, Add New */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b-hairline mb-4">
-          <div className="flex flex-wrap items-center gap-2.5 flex-1 max-w-2xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-slate-200 mb-4">
+          <div className="flex flex-wrap items-center gap-3 flex-1 max-w-2xl">
             {/* Search Input */}
             <div className="relative flex-1 min-w-[200px]">
-              <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar por marca, modelo o rin (ej. Michelin, 205)..."
-                className="w-full bg-white border border-hairline rounded pl-9 pr-3 py-1.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 font-sans"
+                className="w-full bg-white border border-slate-300 rounded-md pl-9 pr-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary font-sans shadow-sm transition-all"
               />
             </div>
 
@@ -330,7 +330,7 @@ export default function InventarioDashboard() {
               <select
                 value={terrainFilter}
                 onChange={(e) => setTerrainFilter(e.target.value)}
-                className="bg-white border border-hairline rounded px-2.5 py-1.5 text-xs text-charcoal-light focus:outline-none focus:border-neutral-400 appearance-none cursor-pointer pr-7 font-sans"
+                className="bg-white border border-slate-300 rounded-md px-3 py-2 text-xs text-slate-600 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary appearance-none cursor-pointer pr-8 font-sans shadow-sm transition-all"
               >
                 <option value="Todos">Terreno: Todos</option>
                 <option value="HT">Highway Terrain (HT)</option>
@@ -339,7 +339,7 @@ export default function InventarioDashboard() {
                 <option value="All Season">All Season</option>
                 <option value="Passenger">Passenger</option>
               </select>
-              <SlidersHorizontal className="w-3 h-3 text-neutral-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
 
             {/* Rin Filter */}
@@ -347,21 +347,21 @@ export default function InventarioDashboard() {
               <select
                 value={rinFilter}
                 onChange={(e) => setRinFilter(e.target.value)}
-                className="bg-white border border-hairline rounded px-2.5 py-1.5 text-xs text-charcoal-light focus:outline-none focus:border-neutral-400 appearance-none cursor-pointer pr-7 font-sans"
+                className="bg-white border border-slate-300 rounded-md px-3 py-2 text-xs text-slate-600 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary appearance-none cursor-pointer pr-8 font-sans shadow-sm transition-all"
               >
                 <option value="Todos">Rin: Todos</option>
                 {uniqueRins.map(r => (
                   <option key={r} value={r.toString()}>Rin {r}"</option>
                 ))}
               </select>
-              <SlidersHorizontal className="w-3 h-3 text-neutral-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
 
           {/* Add New Tire Button */}
           <button
             onClick={handleOpenNewModal}
-            className="text-xs bg-cova-blue text-ceramic font-bold hover:shadow-md px-4 py-2 rounded flex items-center gap-1.5 hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
+            className="text-sm bg-primary text-white font-semibold shadow-sm hover:bg-primary/90 px-4 py-2 rounded-md flex items-center gap-2 transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4 text-white" />
             <span>Registrar Neumático</span>
@@ -369,19 +369,19 @@ export default function InventarioDashboard() {
         </div>
 
         {/* High Density Table */}
-        <div className="overflow-x-auto dense-scrollbar border border-hairline rounded bg-neutral-50/10">
+        <div className="overflow-x-auto dense-scrollbar border border-slate-200 rounded-lg bg-white shadow-sm">
           {loading ? (
-            <div className="py-16 text-center text-xs text-charcoal-light animate-pulse font-medium">
+            <div className="py-16 text-center text-xs text-slate-500 animate-pulse font-medium">
               Cargando catálogo de llantas...
             </div>
           ) : filteredTires.length === 0 ? (
-            <div className="py-16 text-center text-xs text-neutral-400 font-sans p-4">
+            <div className="py-16 text-center text-sm font-semibold text-slate-500 p-4">
               No se encontraron neumáticos con los filtros seleccionados
             </div>
           ) : (
-            <table className="w-full text-left border-collapse font-sans text-xs">
+            <table className="w-full text-left border-collapse text-xs font-sans">
               <thead>
-                <tr className="bg-neutral-50/50 border-b border-hairline text-neutral-500 font-mono text-[9px] uppercase tracking-wider select-none">
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] uppercase tracking-wider select-none">
                   <th className="py-3 px-4 font-semibold">Producto</th>
                   <th className="py-3 px-3 font-semibold">Medida</th>
                   <th className="py-3 px-3 font-semibold text-center">Terreno</th>
@@ -392,7 +392,7 @@ export default function InventarioDashboard() {
                   <th className="py-3 px-4 font-semibold text-center">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-slate-100">
                 {filteredTires.map((tire) => {
                   const isCritical = tire.stock_actual <= tire.stock_minimo;
                   const grossProfit = tire.precio_venta - tire.costo_adquisicion;
@@ -401,56 +401,58 @@ export default function InventarioDashboard() {
                   return (
                     <tr 
                       key={tire.id} 
-                      className={`hover:bg-white transition-colors group ${isCritical ? 'bg-red-50/10' : ''}`}
+                      className={`hover:bg-slate-50 transition-colors group cursor-pointer`}
                     >
-                      <td className="py-2.5 px-4">
-                        <div className="font-bold text-charcoal">{tire.marca}</div>
-                        <div className="text-[10px] text-charcoal-light">{tire.modelo_llanta}</div>
+                      <td className="py-3 px-4">
+                        <div className="font-bold text-slate-900">{tire.marca}</div>
+                        <div className="text-xs text-slate-500">{tire.modelo_llanta}</div>
                       </td>
-                      <td className="py-2.5 px-3 font-mono font-semibold text-charcoal-light">
-                        {tire.ancho}/{tire.perfil} R{tire.rin} <span className="text-[10px] text-neutral-400 font-normal">{tire.indice_carga_velocidad}</span>
+                      <td className="py-3 px-3 tabular-nums font-semibold text-slate-900">
+                        {tire.ancho}/{tire.perfil} R{tire.rin} <span className="text-xs text-slate-400 font-normal">{tire.indice_carga_velocidad}</span>
                       </td>
-                      <td className="py-2.5 px-3 text-center">
-                        <span className="inline-block text-[8px] font-bold bg-neutral-100 text-charcoal-light px-1.5 py-0.5 rounded font-mono">
+                      <td className="py-3 px-3 text-center">
+                        <span className="inline-block text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-mono">
                           {tire.tipo_terreno}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 text-right font-mono text-neutral-500">
+                      <td className="py-3 px-3 text-right tabular-nums text-slate-600 font-medium">
                         ${tire.costo_adquisicion.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                       </td>
-                      <td className="py-2.5 px-3 text-right font-mono font-semibold text-charcoal">
+                      <td className="py-3 px-3 text-right tabular-nums font-bold text-slate-900">
                         ${tire.precio_venta.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                       </td>
-                      <td className="py-2.5 px-3 text-center font-mono">
-                        <span className={`font-semibold ${marginPct >= 30 ? 'text-emerald-700' : 'text-neutral-600'}`}>
+                      <td className="py-3 px-3 text-center tabular-nums">
+                        <span className={`font-semibold ${marginPct >= 30 ? 'text-success' : 'text-slate-600'}`}>
                           {marginPct.toFixed(1)}%
                         </span>
                       </td>
-                      <td className="py-2.5 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <span className={`inline-block w-8 py-0.5 text-center font-mono font-bold rounded text-[10px] border ${
-                            isCritical 
-                              ? 'bg-red-50 text-red-700 border-red-200' 
-                              : 'bg-neutral-100 text-charcoal-light border-neutral-200'
-                          }`}>
-                            {tire.stock_actual}
-                          </span>
-                          <span className="text-[10px] text-neutral-400 font-mono">/</span>
-                          <span className="text-[10px] text-neutral-500 font-mono">{tire.stock_minimo}</span>
+                      <td className="py-3 px-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5 tabular-nums">
+                          {isCritical ? (
+                            <span className="bg-red-50 text-destructive border border-red-200 rounded-full px-2.5 py-0.5 text-xs font-bold inline-block shadow-sm">
+                              {tire.stock_actual}
+                            </span>
+                          ) : (
+                            <span className="text-slate-700 font-bold px-2.5 py-0.5">
+                              {tire.stock_actual}
+                            </span>
+                          )}
+                          <span className="text-slate-400">/</span>
+                          <span className="text-slate-500 font-medium">{tire.stock_minimo}</span>
                         </div>
                       </td>
-                      <td className="py-2.5 px-4 text-center">
+                      <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => handleOpenStockModal(tire)}
-                            className="p-1 text-neutral-400 hover:text-cova-blue hover:bg-neutral-100 rounded transition-all cursor-pointer"
+                            className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 rounded-md transition-all cursor-pointer"
                             title="Registrar Entrada de Llantas"
                           >
                             <ArrowUpCircle className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleOpenEditModal(tire)}
-                            className="p-1 text-neutral-400 hover:text-charcoal hover:bg-neutral-100 rounded transition-all cursor-pointer"
+                            className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 rounded-md transition-all cursor-pointer"
                             title="Editar Parámetros"
                           >
                             <Edit className="w-4 h-4" />
@@ -468,32 +470,32 @@ export default function InventarioDashboard() {
 
       {/* Modal: Registrar entrada de llantas (Quick Stock Update) */}
       {isStockModalOpen && selectedTire && (
-        <div className="fixed inset-0 z-50 bg-charcoal/30 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white border border-hairline rounded-lg w-full max-w-sm p-5 shadow-lg relative animate-in fade-in zoom-in-95 duration-200 flex flex-col gap-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-slate-200 rounded-xl w-full max-w-sm p-6 shadow-lg relative animate-in fade-in zoom-in-95 duration-200 flex flex-col gap-4">
             <button 
               onClick={() => setIsStockModalOpen(false)}
-              className="absolute right-4 top-4 text-neutral-400 hover:text-charcoal"
+              className="absolute right-4 top-4 text-slate-400 hover:text-slate-900 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
 
             <div>
-              <h3 className="text-xs font-bold text-charcoal uppercase tracking-wider font-mono">
-                Registrar Entrada de Inventario
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-sans">
+                Registrar Entrada
               </h3>
-              <p className="text-[10px] text-charcoal-light mt-1">
-                Añadir existencias para {selectedTire.marca} {selectedTire.modelo_llanta} ({selectedTire.ancho}/{selectedTire.perfil} R{selectedTire.rin})
+              <p className="text-xs text-slate-500 mt-1">
+                Añadir existencias para {selectedTire.marca} {selectedTire.modelo_llanta} (<span className="tabular-nums">{selectedTire.ancho}/{selectedTire.perfil} R{selectedTire.rin}</span>)
               </p>
             </div>
 
-            <form onSubmit={handleAddStock} className="flex flex-col gap-4">
-              <div className="flex items-center justify-between p-3 bg-neutral-50 border border-hairline rounded text-xs font-sans">
-                <span className="text-charcoal-light">Existencia Actual:</span>
-                <span className="font-bold text-charcoal">{selectedTire.stock_actual} piezas</span>
+            <form onSubmit={handleAddStock} className="flex flex-col gap-5">
+              <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-md text-xs font-sans">
+                <span className="text-slate-600 font-semibold">Existencia Actual:</span>
+                <span className="font-bold text-slate-900 tabular-nums">{selectedTire.stock_actual} piezas</span>
               </div>
 
               <div className="relative">
-                <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-charcoal-light/60 uppercase tracking-wider">
+                <label className="absolute left-3 top-1.5 text-[9px] font-semibold text-slate-500 uppercase tracking-wider">
                   Cantidad a ingresar (piezas)
                 </label>
                 <input
@@ -502,29 +504,29 @@ export default function InventarioDashboard() {
                   min={1}
                   value={quickStockAmount}
                   onChange={(e) => setQuickStockAmount(parseInt(e.target.value) || 0)}
-                  className="w-full bg-white border border-hairline rounded pt-4 pb-1.5 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 font-mono"
+                  className="w-full bg-white border border-slate-300 rounded-md pt-5 pb-1.5 px-3 text-sm text-slate-900 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary tabular-nums shadow-sm transition-all"
                 />
               </div>
 
-              <div className="flex items-center gap-2 pt-2">
+              <div className="flex items-center gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsStockModalOpen(false)}
-                  className="flex-1 py-2 text-xs font-semibold text-charcoal hover:bg-neutral-50 border border-hairline rounded cursor-pointer"
+                  className="flex-1 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 border border-slate-200 rounded-md cursor-pointer transition-colors shadow-sm"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="flex-1 py-2 text-xs font-semibold text-ceramic bg-cova-blue border border-cova-blue hover:shadow-md rounded cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2 text-sm font-semibold text-white bg-primary hover:bg-primary/90 shadow-sm rounded-md cursor-pointer flex items-center justify-center gap-1.5 transition-colors"
                 >
                   {formLoading ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <Plus className="w-3.5 h-3.5 text-white" />
+                    <Plus className="w-4 h-4 text-white" />
                   )}
-                  <span>Registrar Entrada</span>
+                  <span>Registrar</span>
                 </button>
               </div>
             </form>
@@ -534,23 +536,23 @@ export default function InventarioDashboard() {
 
       {/* Modal: Registrar Nueva Llanta / Editar Llanta */}
       {(isNewModalOpen || isEditModalOpen) && (
-        <div className="fixed inset-0 z-50 bg-charcoal/30 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white border border-hairline rounded-lg w-full max-w-xl p-5 shadow-lg relative animate-in fade-in zoom-in-95 duration-200 flex flex-col gap-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-slate-200 rounded-xl w-full max-w-xl p-6 shadow-lg relative animate-in fade-in zoom-in-95 duration-200 flex flex-col gap-5">
             <button 
               onClick={() => {
                 setIsNewModalOpen(false);
                 setIsEditModalOpen(false);
               }}
-              className="absolute right-4 top-4 text-neutral-400 hover:text-charcoal"
+              className="absolute right-4 top-4 text-slate-400 hover:text-slate-900 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
 
             <div>
-              <h3 className="text-xs font-bold text-charcoal uppercase tracking-wider font-mono">
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-sans">
                 {isNewModalOpen ? 'Registrar Neumático en Catálogo' : 'Editar Propiedades del Neumático'}
               </h3>
-              <p className="text-[10px] text-charcoal-light mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 {isNewModalOpen ? 'Llene los campos para ingresar un nuevo modelo al inventario' : 'Modifique los campos y salve para actualizar la base de datos'}
               </p>
             </div>
@@ -559,7 +561,7 @@ export default function InventarioDashboard() {
               {/* Row 1: Brand & Model */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="relative">
-                  <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-charcoal-light/60 uppercase tracking-wider">
+                  <label className="absolute left-3 top-1.5 text-[9px] font-semibold text-slate-500 uppercase tracking-wider">
                     Marca
                   </label>
                   <input
@@ -568,11 +570,11 @@ export default function InventarioDashboard() {
                     value={formData.marca}
                     onChange={(e) => setFormData(prev => ({ ...prev, marca: e.target.value }))}
                     placeholder="Ej. Michelin"
-                    className="w-full bg-white border border-hairline rounded pt-4 pb-1.5 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 font-sans"
+                    className="w-full bg-white border border-slate-300 rounded-md pt-5 pb-1.5 px-3 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm transition-all"
                   />
                 </div>
                 <div className="relative">
-                  <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-charcoal-light/60 uppercase tracking-wider">
+                  <label className="absolute left-3 top-1.5 text-[9px] font-semibold text-slate-500 uppercase tracking-wider">
                     Modelo de Llanta
                   </label>
                   <input
@@ -581,15 +583,15 @@ export default function InventarioDashboard() {
                     value={formData.modelo_llanta}
                     onChange={(e) => setFormData(prev => ({ ...prev, modelo_llanta: e.target.value }))}
                     placeholder="Ej. Primacy 4"
-                    className="w-full bg-white border border-hairline rounded pt-4 pb-1.5 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 font-sans"
+                    className="w-full bg-white border border-slate-300 rounded-md pt-5 pb-1.5 px-3 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm transition-all"
                   />
                 </div>
               </div>
 
               {/* Row 2: Specifications (Ancho, Perfil, Rin, Indice) */}
-              <div className="grid grid-cols-4 gap-2.5">
+              <div className="grid grid-cols-4 gap-3">
                 <div className="relative">
-                  <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-charcoal-light/60 uppercase tracking-wider">
+                  <label className="absolute left-3 top-1.5 text-[9px] font-semibold text-slate-500 uppercase tracking-wider">
                     Ancho
                   </label>
                   <input
@@ -597,11 +599,11 @@ export default function InventarioDashboard() {
                     required
                     value={formData.ancho}
                     onChange={(e) => setFormData(prev => ({ ...prev, ancho: parseInt(e.target.value) || 0 }))}
-                    className="w-full bg-white border border-hairline rounded pt-4 pb-1.5 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 font-mono"
+                    className="w-full bg-white border border-slate-300 rounded-md pt-5 pb-1.5 px-3 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary tabular-nums shadow-sm transition-all"
                   />
                 </div>
                 <div className="relative">
-                  <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-charcoal-light/60 uppercase tracking-wider">
+                  <label className="absolute left-3 top-1.5 text-[9px] font-semibold text-slate-500 uppercase tracking-wider">
                     Perfil
                   </label>
                   <input
@@ -609,11 +611,11 @@ export default function InventarioDashboard() {
                     required
                     value={formData.perfil}
                     onChange={(e) => setFormData(prev => ({ ...prev, perfil: parseInt(e.target.value) || 0 }))}
-                    className="w-full bg-white border border-hairline rounded pt-4 pb-1.5 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 font-mono"
+                    className="w-full bg-white border border-slate-300 rounded-md pt-5 pb-1.5 px-3 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary tabular-nums shadow-sm transition-all"
                   />
                 </div>
                 <div className="relative">
-                  <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-charcoal-light/60 uppercase tracking-wider">
+                  <label className="absolute left-3 top-1.5 text-[9px] font-semibold text-slate-500 uppercase tracking-wider">
                     Rin
                   </label>
                   <input
@@ -621,11 +623,11 @@ export default function InventarioDashboard() {
                     required
                     value={formData.rin}
                     onChange={(e) => setFormData(prev => ({ ...prev, rin: parseInt(e.target.value) || 0 }))}
-                    className="w-full bg-white border border-hairline rounded pt-4 pb-1.5 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 font-mono"
+                    className="w-full bg-white border border-slate-300 rounded-md pt-5 pb-1.5 px-3 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary tabular-nums shadow-sm transition-all"
                   />
                 </div>
                 <div className="relative">
-                  <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-charcoal-light/60 uppercase tracking-wider">
+                  <label className="absolute left-3 top-1.5 text-[9px] font-semibold text-slate-500 uppercase tracking-wider">
                     Índice C/V
                   </label>
                   <input
@@ -634,7 +636,7 @@ export default function InventarioDashboard() {
                     value={formData.indice_carga_velocidad}
                     onChange={(e) => setFormData(prev => ({ ...prev, indice_carga_velocidad: e.target.value }))}
                     placeholder="91H"
-                    className="w-full bg-white border border-hairline rounded pt-4 pb-1.5 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 font-mono"
+                    className="w-full bg-white border border-slate-300 rounded-md pt-5 pb-1.5 px-3 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary tabular-nums shadow-sm transition-all"
                   />
                 </div>
               </div>
@@ -642,13 +644,13 @@ export default function InventarioDashboard() {
               {/* Row 3: Terrain, Stock Actual, Stock Mínimo */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="relative">
-                  <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-charcoal-light/60 uppercase tracking-wider">
+                  <label className="absolute left-3 top-1.5 text-[9px] font-semibold text-slate-500 uppercase tracking-wider">
                     Tipo Terreno
                   </label>
                   <select
                     value={formData.tipo_terreno}
                     onChange={(e) => setFormData(prev => ({ ...prev, tipo_terreno: e.target.value }))}
-                    className="w-full bg-white border border-hairline rounded pt-4 pb-1.5 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 appearance-none cursor-pointer pr-8 font-sans"
+                    className="w-full bg-white border border-slate-300 rounded-md pt-5 pb-1.5 px-3 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary appearance-none cursor-pointer pr-8 shadow-sm transition-all"
                   >
                     <option value="HT">HT - Highway</option>
                     <option value="AT">AT - All Terrain</option>
@@ -658,7 +660,7 @@ export default function InventarioDashboard() {
                   </select>
                 </div>
                 <div className="relative">
-                  <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-charcoal-light/60 uppercase tracking-wider">
+                  <label className="absolute left-3 top-1.5 text-[9px] font-semibold text-slate-500 uppercase tracking-wider">
                     Stock Actual
                   </label>
                   <input
@@ -666,11 +668,11 @@ export default function InventarioDashboard() {
                     required
                     value={formData.stock_actual}
                     onChange={(e) => setFormData(prev => ({ ...prev, stock_actual: parseInt(e.target.value) || 0 }))}
-                    className="w-full bg-white border border-hairline rounded pt-4 pb-1.5 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 font-mono"
+                    className="w-full bg-white border border-slate-300 rounded-md pt-5 pb-1.5 px-3 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary tabular-nums shadow-sm transition-all"
                   />
                 </div>
                 <div className="relative">
-                  <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-charcoal-light/60 uppercase tracking-wider">
+                  <label className="absolute left-3 top-1.5 text-[9px] font-semibold text-slate-500 uppercase tracking-wider">
                     Stock Mínimo
                   </label>
                   <input
@@ -678,7 +680,7 @@ export default function InventarioDashboard() {
                     required
                     value={formData.stock_minimo}
                     onChange={(e) => setFormData(prev => ({ ...prev, stock_minimo: parseInt(e.target.value) || 0 }))}
-                    className="w-full bg-white border border-hairline rounded pt-4 pb-1.5 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 font-mono"
+                    className="w-full bg-white border border-slate-300 rounded-md pt-5 pb-1.5 px-3 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary tabular-nums shadow-sm transition-all"
                   />
                 </div>
               </div>
@@ -686,7 +688,7 @@ export default function InventarioDashboard() {
               {/* Row 4: Costo de Adquisición & Precio de Venta */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="relative">
-                  <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-charcoal-light/60 uppercase tracking-wider">
+                  <label className="absolute left-3 top-1.5 text-[9px] font-semibold text-slate-500 uppercase tracking-wider">
                     Costo de Adquisición ($)
                   </label>
                   <input
@@ -696,11 +698,11 @@ export default function InventarioDashboard() {
                     step="0.01"
                     value={formData.costo_adquisicion}
                     onChange={(e) => setFormData(prev => ({ ...prev, costo_adquisicion: parseFloat(e.target.value) || 0 }))}
-                    className="w-full bg-white border border-hairline rounded pt-4 pb-1.5 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 font-mono"
+                    className="w-full bg-white border border-slate-300 rounded-md pt-5 pb-1.5 px-3 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary tabular-nums shadow-sm transition-all"
                   />
                 </div>
                 <div className="relative">
-                  <label className="absolute left-2.5 top-1.5 text-[9px] font-semibold text-charcoal-light/60 uppercase tracking-wider">
+                  <label className="absolute left-3 top-1.5 text-[9px] font-semibold text-slate-500 uppercase tracking-wider">
                     Precio de Venta ($)
                   </label>
                   <input
@@ -710,31 +712,31 @@ export default function InventarioDashboard() {
                     step="0.01"
                     value={formData.precio_venta}
                     onChange={(e) => setFormData(prev => ({ ...prev, precio_venta: parseFloat(e.target.value) || 0 }))}
-                    className="w-full bg-white border border-hairline rounded pt-4 pb-1.5 px-2.5 text-xs text-charcoal focus:outline-none focus:border-neutral-400 font-mono"
+                    className="w-full bg-white border border-slate-300 rounded-md pt-5 pb-1.5 px-3 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary tabular-nums shadow-sm transition-all"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 pt-2">
+              <div className="flex items-center gap-3 pt-3">
                 <button
                   type="button"
                   onClick={() => {
                     setIsNewModalOpen(false);
                     setIsEditModalOpen(false);
                   }}
-                  className="flex-1 py-2.5 text-xs font-semibold text-charcoal hover:bg-neutral-50 border border-hairline rounded cursor-pointer"
+                  className="flex-1 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 border border-slate-200 rounded-md cursor-pointer transition-colors shadow-sm"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="flex-1 py-2.5 text-xs font-semibold text-ceramic bg-cova-blue border border-cova-blue hover:shadow-md rounded cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 text-sm font-semibold text-white bg-primary hover:bg-primary/90 shadow-sm rounded-md cursor-pointer flex items-center justify-center gap-1.5 transition-colors"
                 >
                   {formLoading ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <Check className="w-3.5 h-3.5 text-white" />
+                    <Check className="w-4 h-4 text-white" />
                   )}
                   <span>{isNewModalOpen ? 'Guardar Modelo' : 'Actualizar Cambios'}</span>
                 </button>

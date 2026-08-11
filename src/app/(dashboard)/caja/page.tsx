@@ -82,8 +82,8 @@ export default function CajaPage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-zinc-50">
-        <Loader2 className="animate-spin text-emerald-600" size={32} />
+      <div className="flex h-screen items-center justify-center bg-background">
+        <Loader2 className="animate-spin text-primary" size={32} />
       </div>
     );
   }
@@ -98,17 +98,17 @@ export default function CajaPage() {
   const totalNeto = totalCobrado - totalComisiones;
 
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-50 pb-24 md:pb-0">
+    <div className="flex flex-col min-h-screen bg-background pb-24 md:pb-0">
       
       {/* Header */}
-      <header className="bg-white border-b border-zinc-200 px-6 py-5 shrink-0 flex items-center justify-between sticky top-0 z-10">
+      <header className="bg-card border-b border-slate-200 px-6 py-5 shrink-0 flex items-center justify-between sticky top-0 z-10 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
             <Landmark size={24} strokeWidth={2} />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-zinc-900 tracking-tight">Caja y Pagos</h1>
-            <p className="text-sm text-zinc-500 font-medium">Corte de caja omnicanal y cuentas por cobrar</p>
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Caja y Pagos</h1>
+            <p className="text-sm text-slate-500 font-medium">Corte de caja omnicanal y cuentas por cobrar</p>
           </div>
         </div>
       </header>
@@ -117,44 +117,44 @@ export default function CajaPage() {
         
         {/* Corte de Caja KPI */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-          <div className="bg-emerald-600 p-5 rounded-2xl shadow-sm flex flex-col justify-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-20"><Landmark size={48} /></div>
-            <span className="text-xs font-bold text-emerald-200 uppercase tracking-wider mb-1 relative z-10">Total Neto (Hoy)</span>
-            <span className="text-3xl font-mono font-black text-white relative z-10">${totalNeto.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
-            {totalComisiones > 0 && <span className="text-[10px] text-emerald-200 font-medium relative z-10 mt-1">Bruto: ${totalCobrado.toLocaleString("es-MX")} - Comisiones: ${totalComisiones.toLocaleString("es-MX")}</span>}
+          <div className="bg-card rounded-lg p-4 border border-slate-200 shadow-sm flex flex-col justify-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-10"><Landmark size={48} className="text-slate-900" /></div>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 relative z-10">Total Neto (Hoy)</span>
+            <span className="text-2xl font-bold text-slate-900 tabular-nums relative z-10">${totalNeto.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
+            {totalComisiones > 0 && <span className="text-[10px] text-slate-400 font-medium relative z-10 mt-1 tabular-nums">Bruto: ${totalCobrado.toLocaleString("es-MX")} - Comisiones: ${totalComisiones.toLocaleString("es-MX")}</span>}
           </div>
           
-          <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm flex flex-col justify-center">
+          <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-1">
-              <Banknote size={14} className="text-emerald-500" />
-              <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Efectivo</span>
+              <Banknote size={14} className="text-success" />
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Efectivo</span>
             </div>
-            <span className="text-xl font-mono font-bold text-zinc-800">${totalEfectivo.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
+            <span className="text-2xl font-bold text-slate-900 tabular-nums">${totalEfectivo.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
           </div>
           
-          <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm flex flex-col justify-center">
+          <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-1">
-              <CreditCard size={14} className="text-blue-500" />
-              <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Tarjetas (MP/Stripe)</span>
+              <CreditCard size={14} className="text-primary" />
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tarjetas (MP/Stripe)</span>
             </div>
-            <span className="text-xl font-mono font-bold text-zinc-800">${totalTarjeta.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
+            <span className="text-2xl font-bold text-slate-900 tabular-nums">${totalTarjeta.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm flex flex-col justify-center">
+          <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-1">
-              <Smartphone size={14} className="text-purple-500" />
-              <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">BNPL (Kueski/Atrato)</span>
+              <Smartphone size={14} className="text-secondary-foreground" />
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">BNPL (Kueski)</span>
             </div>
-            <span className="text-xl font-mono font-bold text-zinc-800">${totalBNPL.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
+            <span className="text-2xl font-bold text-slate-900 tabular-nums">${totalBNPL.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm flex flex-col justify-center">
+          <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Status Transacciones</span>
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Transacciones</span>
             </div>
             <div className="flex justify-between items-center text-sm">
-              <span className="text-emerald-600 font-semibold">{aprobadas.length} Aprob.</span>
-              <span className="text-amber-500 font-semibold">{transaccionesHoy.filter(t => t.estatus === 'Pendiente' || t.estatus === 'Procesando').length} Proc.</span>
+              <span className="text-success font-semibold">{aprobadas.length} Aprob.</span>
+              <span className="text-slate-500 font-semibold">{transaccionesHoy.filter(t => t.estatus === 'Pendiente' || t.estatus === 'Procesando').length} Proc.</span>
             </div>
           </div>
         </div>
@@ -163,71 +163,97 @@ export default function CajaPage() {
           
           {/* Cuentas por Cobrar */}
           <div className="flex flex-col gap-4">
-            <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-wider flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-slate-500"></span>
               Cuentas por Cobrar ({cuentasPorCobrar.length})
             </h2>
             
-            <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden flex-1 max-h-[500px] overflow-y-auto dense-scrollbar">
+            <div className="bg-card border border-slate-200 rounded-lg shadow-sm overflow-hidden flex-1 max-h-[500px] overflow-y-auto">
               {cuentasPorCobrar.length === 0 ? (
-                <div className="p-8 text-center text-zinc-400">No hay cuentas por cobrar pendientes.</div>
+                <div className="p-8 text-center text-slate-400">No hay cuentas por cobrar pendientes.</div>
               ) : (
-                <div className="divide-y divide-zinc-100">
-                  {cuentasPorCobrar.map(c => (
-                    <div key={c.id} className="p-4 flex items-center justify-between hover:bg-zinc-50 transition-colors">
-                      <div>
-                        <h4 className="font-bold text-zinc-900">{c.vehiculos?.marca} {c.vehiculos?.modelo} <span className="text-zinc-400 text-xs font-normal">({c.vehiculos?.placas})</span></h4>
-                        <p className="text-xs text-zinc-500 mt-0.5">{c.vehiculos?.clientes?.nombre} • Estatus: {c.estado}</p>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <span className="font-mono font-black text-amber-600 text-lg">${c.saldo.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
-                        <Link href="/tablero" className="text-[10px] uppercase font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 mt-1">
-                          Ir a Tablero <ArrowRight size={12} />
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <tr>
+                      <th className="px-4 py-3">Cliente / Vehículo</th>
+                      <th className="px-4 py-3 text-right">Monto Pendiente</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {cuentasPorCobrar.map(c => {
+                      const isOverdue = c.estado === 'Terminado / Listo para Entrega';
+                      return (
+                        <tr key={c.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-4 py-3">
+                            <h4 className="font-semibold text-slate-900 text-sm">{c.vehiculos?.marca} {c.vehiculos?.modelo} <span className="text-slate-500 font-normal tabular-nums">({c.vehiculos?.placas})</span></h4>
+                            <p className="text-xs text-slate-500 mt-0.5">{c.vehiculos?.clientes?.nombre} • Estatus: {c.estado}</p>
+                          </td>
+                          <td className="px-4 py-3 text-right flex flex-col items-end justify-center">
+                            <span className={`text-base font-bold tabular-nums ${isOverdue ? 'text-destructive' : 'text-slate-500'}`}>
+                              ${c.saldo.toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                            </span>
+                            <Link href="/tablero" className="text-[10px] uppercase font-bold text-primary hover:text-primary/80 flex items-center gap-1 mt-1">
+                              Cobrar <ArrowRight size={12} />
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               )}
             </div>
           </div>
 
-          {/* Transacciones de Hoy (Intents) */}
+          {/* Transacciones de Hoy */}
           <div className="flex flex-col gap-4">
-            <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-wider flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-              Historial de Payment Intents (Hoy)
+            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-success"></span>
+              Ingresos del Día
             </h2>
             
-            <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden flex-1 max-h-[500px] overflow-y-auto dense-scrollbar">
+            <div className="bg-card border border-slate-200 rounded-lg shadow-sm overflow-hidden flex-1 max-h-[500px] overflow-y-auto">
               {transaccionesHoy.length === 0 ? (
-                <div className="p-8 text-center text-zinc-400">Aún no hay Payment Intents generados hoy.</div>
+                <div className="p-8 text-center text-slate-400">Aún no hay transacciones generadas hoy.</div>
               ) : (
-                <div className="divide-y divide-zinc-100">
-                  {transaccionesHoy.map(t => (
-                    <div key={t.id} className="p-4 flex items-center justify-between hover:bg-zinc-50 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${t.estatus === 'Aprobado' ? 'bg-emerald-50 text-emerald-600' : t.estatus === 'Rechazado' ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600'}`}>
-                          {t.proveedor_pago === 'Efectivo' ? <Banknote size={16} /> : t.proveedor_pago === 'KueskiPay' || t.proveedor_pago === 'Atrato' ? <Smartphone size={16} /> : <CreditCard size={16} />}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-zinc-900 text-sm">{t.proveedor_pago}</span>
-                            <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${t.estatus === 'Aprobado' ? 'bg-emerald-100 text-emerald-700' : t.estatus === 'Rechazado' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>
-                              {t.estatus}
-                            </span>
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <tr>
+                      <th className="px-4 py-3">Transacción</th>
+                      <th className="px-4 py-3 text-right">Total Pagado</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {transaccionesHoy.map(t => (
+                      <tr key={t.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${t.estatus === 'Aprobado' ? 'bg-success/10 text-success' : t.estatus === 'Rechazado' ? 'bg-destructive/10 text-destructive' : 'bg-yellow-500/10 text-yellow-500'}`}>
+                            {t.proveedor_pago === 'Efectivo' ? <Banknote size={16} /> : t.proveedor_pago === 'KueskiPay' || t.proveedor_pago === 'Atrato' ? <Smartphone size={16} /> : <CreditCard size={16} />}
                           </div>
-                          <p className="text-xs text-zinc-500 mt-0.5">{new Date(t.fecha_pago).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} • {t.ordenes_servicio?.vehiculos?.marca}</p>
-                          {t.external_transaction_id && <p className="text-[10px] text-zinc-400 font-mono mt-0.5">Ref: {t.external_transaction_id}</p>}
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <span className="font-mono font-bold text-zinc-900">${Number(t.monto_total).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
-                        {Number(t.comision_pasarela) > 0 && <span className="text-[10px] text-zinc-400 font-medium">Comisión: -${Number(t.comision_pasarela).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-slate-900 text-sm">{t.proveedor_pago}</span>
+                              <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${t.estatus === 'Aprobado' ? 'bg-success text-white' : t.estatus === 'Rechazado' ? 'bg-destructive text-white' : 'bg-yellow-500 text-white'}`}>
+                                {t.estatus}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-0.5">{new Date(t.fecha_pago).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} • {t.ordenes_servicio?.vehiculos?.marca}</p>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="text-base font-bold text-slate-900 tabular-nums flex flex-col items-end justify-center">
+                            ${Number(t.monto_total).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                            {Number(t.comision_pasarela) > 0 && (
+                              <span className="text-[10px] text-slate-400 font-medium font-sans">
+                                Com: -${Number(t.comision_pasarela).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                              </span>
+                            )}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               )}
             </div>
           </div>

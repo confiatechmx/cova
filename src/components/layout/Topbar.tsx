@@ -1,42 +1,55 @@
-import { Search, Bell, ChevronDown } from "lucide-react";
+import { Search, Bell, ChevronDown, Building2 } from "lucide-react";
 
 export function Topbar() {
   return (
-    <header className="h-[68px] border-b border-zinc-200/60 bg-white/80 backdrop-blur-md sticky top-0 z-10 flex items-center justify-between px-8">
-      <div className="flex-1 max-w-xl">
-        <div className="relative group">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-            <Search size={16} strokeWidth={1.5} className="text-zinc-400 group-focus-within:text-blue-500 transition-colors" />
+    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between px-6 bg-white border-b border-slate-200 w-full transition-all">
+      <div className="flex items-center gap-6 flex-1">
+        {/* Tenant Selector */}
+        <div className="flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors border border-transparent hover:border-slate-200">
+          <div className="bg-primary p-1.5 rounded-md text-white shadow-sm">
+            <Building2 size={16} strokeWidth={2} />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-semibold text-foreground leading-none">Matriz Monterrey</span>
+            <span className="text-[11px] text-muted-foreground mt-0.5">AutoListo Premium</span>
+          </div>
+          <ChevronDown size={14} strokeWidth={2} className="text-slate-400 ml-1" />
+        </div>
+
+        {/* Global Search */}
+        <div className="relative group max-w-md w-full hidden lg:block">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search size={16} strokeWidth={2} className="text-slate-400 group-focus-within:text-primary transition-colors" />
           </div>
           <input 
             type="text" 
             placeholder="Buscar orden, cliente o placa..." 
-            className="block w-full pl-10 pr-14 py-2 border border-zinc-200/80 rounded-xl leading-5 bg-zinc-50/50 text-zinc-900 placeholder-zinc-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 sm:text-sm transition-all shadow-sm"
+            className="block w-full pl-9 pr-12 py-2 border border-slate-200 rounded-lg bg-slate-50/50 text-foreground placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-primary focus:border-primary text-sm transition-all"
           />
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-            <kbd className="inline-flex items-center text-[10px] font-sans font-medium text-zinc-400 border border-zinc-200 rounded px-2 py-0.5 bg-white shadow-sm">
-              ⌘ K
+          <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
+            <kbd className="inline-flex items-center text-[10px] font-medium text-slate-400 border border-slate-200 rounded px-1.5 py-0.5 bg-white">
+              ⌘K
             </kbd>
           </div>
         </div>
       </div>
 
       <div className="flex items-center gap-5">
-        <button className="text-zinc-400 hover:text-zinc-700 transition-colors relative p-2 rounded-full hover:bg-zinc-50">
-          <Bell size={18} strokeWidth={1.5} />
-          <span className="absolute top-2 right-2.5 block h-1.5 w-1.5 rounded-full bg-red-500 ring-2 ring-white" />
+        {/* Notifications */}
+        <button className="relative p-2 text-slate-400 hover:text-foreground rounded-full hover:bg-slate-50 transition-colors">
+          <Bell size={20} strokeWidth={2} />
+          <span className="absolute top-1.5 right-2 block h-2 w-2 rounded-full bg-destructive ring-2 ring-white" />
         </button>
         
         {/* Profile Widget */}
-        <div className="flex items-center gap-2 cursor-pointer group hover:bg-zinc-50 p-1.5 rounded-xl transition-colors">
-          <div className="relative">
-            <div className="h-8 w-8 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 text-xs font-semibold shadow-sm transition-transform group-hover:scale-105">
-              AC
-            </div>
-            {/* Online indicator */}
-            <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 bg-green-500 rounded-full border-2 border-white" />
+        <div className="flex items-center gap-3 pl-5 border-l border-slate-200 cursor-pointer group">
+          <div className="flex flex-col items-end hidden sm:flex">
+            <span className="text-sm font-medium text-foreground leading-none">Eduardo C.</span>
+            <span className="text-xs text-muted-foreground mt-1">Admin</span>
           </div>
-          <ChevronDown size={14} strokeWidth={2} className="text-zinc-400 group-hover:text-zinc-600 transition-colors" />
+          <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-bold border border-primary/20 transition-transform group-hover:scale-105">
+            EC
+          </div>
         </div>
       </div>
     </header>
